@@ -8,6 +8,7 @@ using namespace std ;
 
 typedef struct Employee Employee  ;
 typedef struct Task Task  ;
+
 Task add_task(string task_name ,int priority ) ; 
 Employee add_employee(string employee_name);
 void assign_employee (string task_name , string employee_name , vector<Task> &tasks , vector<Employee> &employee) ;
@@ -15,6 +16,7 @@ void finish_task(string task_name,vector<Task> &tasks);
 void report_all(vector<Task> tasks) ; 
 void report_ongoing(vector<Task> tasks) ; 
 void report_employee(string employee_name,vector<Employee> employees);
+void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employes ) ;
 
 typedef struct Employee
 {
@@ -34,6 +36,11 @@ int main()
     string line ; 
     vector <Task> tasks ; 
     vector<Employee> employes; 
+    input_handeling(line ,tasks , employes);
+    
+}
+void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employes )
+{
     while(getline(cin ,line))
     {
         
@@ -88,9 +95,7 @@ int main()
         }
 
     }
-    
 }
-
 Task add_task(string task_name ,int priority )
 {
     Task task ; 
@@ -184,14 +189,18 @@ void report_ongoing(vector<Task> tasks)
 }
 void report_employee(string employee_name,vector<Employee> employees)
 {
-    int count_task,count_ongoing=0 ; 
+    int count_task=0,count_ongoing=0 ; 
     bool flag = false ; 
 
     for(Employee e:employees)
     {
         if(e.employee_name==employee_name)
         {
-            count_task = (e.tasks).size() ;
+            for(Task task:e.tasks)
+            {
+                if(task.status=="DONE") count_task++ ; 
+            }
+            
             cout << employee_name <<" has done "<<count_task<<" tasks."<<"\n" ;
             vector<Task>::const_reverse_iterator it ; 
             for(it=(e.tasks).rbegin();it!=(e.tasks).rend();++it)
