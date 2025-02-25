@@ -5,10 +5,20 @@
 #include <list>
 #include <bits/stdc++.h>
 using namespace std ;
+const string add_task_name = "add_task" ; 
+const string add_employee_name = "add_employee" ; 
+const string assign_employee_name = "assign_employee" ; 
+const string finish_task_name = "finish_task" ; 
+const string report_name = "report" ; 
+const string all_name = "all" ;
+const string ongoing_name = "ongoing" ; 
+const string employee_name= "employee" ; 
+const string TODO ="TODO" ; 
+const string ONGOING="ONGOING" ; 
+const string DONE = "DONE" ; 
 
 typedef struct Employee Employee  ;
 typedef struct Task Task  ;
-
 Task add_task(string task_name ,int priority ) ; 
 Employee add_employee(string employee_name);
 void assign_employee (string task_name , string employee_name , vector<Task> &tasks , vector<Employee> &employee) ;
@@ -16,7 +26,6 @@ void finish_task(string task_name,vector<Task> &tasks);
 void report_all(vector<Task> tasks) ; 
 void report_ongoing(vector<Task> tasks) ; 
 void report_employee(string employee_name,vector<Employee> employees);
-void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employes ) ;
 
 typedef struct Employee
 {
@@ -36,18 +45,13 @@ int main()
     string line ; 
     vector <Task> tasks ; 
     vector<Employee> employes; 
-    input_handeling(line ,tasks , employes);
-    
-}
-void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employes )
-{
     while(getline(cin ,line))
     {
         
         std::regex del(" ")  ;
         sregex_token_iterator it(line.begin(),line.end(),del,-1) ; 
         sregex_token_iterator end ; 
-        if(*it=="add_task")
+        if(*it==add_task_name)
         {
             ++it ; 
             string arg1 = *it ; 
@@ -55,13 +59,13 @@ void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employ
             int arg2 = stoi(*it) ; 
             tasks.push_back(add_task(arg1 , arg2)) ; 
         }
-        else if (*it=="add_employee")
+        else if (*it==add_employee_name)
         {
             ++it ; 
             string arg1 = *it ;
             employes.push_back(add_employee(arg1)) ;
         }
-        else if (*it=="assign_employee")
+        else if (*it==assign_employee_name)
         {
             ++it ; 
             string arg1 = *it ;
@@ -69,24 +73,24 @@ void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employ
             string arg2 = *it ;
             assign_employee(arg1 , arg2,tasks,employes) ; 
         }
-        else if (*it=="finish_task")
+        else if (*it==finish_task_name)
         {
             ++it ; 
             string arg1 = *it ;
             finish_task(arg1,tasks);
         }
-        else if(*it=="report")
+        else if(*it==report_name)
         {
             ++it ; 
-            if(*it=="all")
+            if(*it==all_name)
             {
                 report_all(tasks) ;
             }
-            else if (*it=="ongoing")
+            else if (*it==ongoing_name)
             {
                 report_ongoing(tasks) ;
             }
-            else if (*it=="employee")
+            else if (*it==employee_name)
             {
                 ++it ; 
                 string arg1 = *it ;
@@ -95,13 +99,15 @@ void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employ
         }
 
     }
+    
 }
+
 Task add_task(string task_name ,int priority )
 {
     Task task ; 
     task.task_name = task_name ; 
     task.priority = priority ; 
-    task.status = "TODO" ; 
+    task.status = TODO ; 
     return task ; 
 }
 Employee add_employee(string employee_name)
@@ -120,7 +126,7 @@ void assign_employee (string task_name , string employee_name , vector<Task> &ta
         if(it->task_name == task_name)
         {
             (it->employees).push_back(employee) ;// beacuse we know it has to be employee in assumption
-            it->status="ONGOING" ;
+            it->status=ONGOING ;
             break;
         }
     }
@@ -142,7 +148,7 @@ void finish_task(string task_name,vector<Task> &tasks)
     {
         if(it->task_name==task_name)
         {
-            it->status="DONE" ;
+            it->status=DONE ;
             break;
         }
     }
@@ -189,18 +195,14 @@ void report_ongoing(vector<Task> tasks)
 }
 void report_employee(string employee_name,vector<Employee> employees)
 {
-    int count_task=0,count_ongoing=0 ; 
+    int count_task,count_ongoing=0 ; 
     bool flag = false ; 
 
     for(Employee e:employees)
     {
         if(e.employee_name==employee_name)
         {
-            for(Task task:e.tasks)
-            {
-                if(task.status=="DONE") count_task++ ; 
-            }
-            
+            count_task = (e.tasks).size() ;
             cout << employee_name <<" has done "<<count_task<<" tasks."<<"\n" ;
             vector<Task>::const_reverse_iterator it ; 
             for(it=(e.tasks).rbegin();it!=(e.tasks).rend();++it)
