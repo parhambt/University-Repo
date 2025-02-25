@@ -5,20 +5,10 @@
 #include <list>
 #include <bits/stdc++.h>
 using namespace std ;
-const string add_task_name = "add_task" ; 
-const string add_employee_name = "add_employee" ; 
-const string assign_employee_name = "assign_employee" ; 
-const string finish_task_name = "finish_task" ; 
-const string report_name = "report" ; 
-const string all_name = "all" ;
-const string ongoing_name = "ongoing" ; 
-const string employee_name= "employee" ; 
-const string TODO ="TODO" ; 
-const string ONGOING="ONGOING" ; 
-const string DONE = "DONE" ; 
 
 typedef struct Employee Employee  ;
 typedef struct Task Task  ;
+
 Task add_task(string task_name ,int priority ) ; 
 Employee add_employee(string employee_name);
 void assign_employee (string task_name , string employee_name , vector<Task> &tasks , vector<Employee> &employee) ;
@@ -26,7 +16,18 @@ void finish_task(string task_name,vector<Task> &tasks);
 void report_all(vector<Task> tasks) ; 
 void report_ongoing(vector<Task> tasks) ; 
 void report_employee(string employee_name,vector<Employee> employees);
-
+void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employes ) ;
+const string add_task_name = "add_task" ; 
+const string add_employee_name = "add_employee" ; 
+const string assign_employee_name = "assign_employee" ; 
+const string finish_task_name = "finish_task" ; 
+const string report_name = "report" ; 
+const string all_name = "all" ;
+const string ongoing_name = "ongoing" ; 
+const string Employee_name= "employee" ; 
+const string TODO ="TODO" ; 
+const string ONGOING="ONGOING" ; 
+const string DONE = "DONE" ; 
 typedef struct Employee
 {
     string employee_name  ;
@@ -45,6 +46,11 @@ int main()
     string line ; 
     vector <Task> tasks ; 
     vector<Employee> employes; 
+    input_handeling(line ,tasks , employes);
+    
+}
+void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employes )
+{
     while(getline(cin ,line))
     {
         
@@ -90,7 +96,7 @@ int main()
             {
                 report_ongoing(tasks) ;
             }
-            else if (*it==employee_name)
+            else if (*it==Employee_name)
             {
                 ++it ; 
                 string arg1 = *it ;
@@ -99,9 +105,7 @@ int main()
         }
 
     }
-    
 }
-
 Task add_task(string task_name ,int priority )
 {
     Task task ; 
@@ -158,9 +162,9 @@ void report_all(vector<Task> tasks)
     int todo=0 ,ongoing=0 , done=0 ; 
     for(Task task : tasks)
     {
-        if(task.status=="TODO") todo++ ; 
-        else if (task.status=="ONGOING") ongoing ++ ; 
-        else if (task.status=="DONE") done ++ ;
+        if(task.status==TODO) todo++ ; 
+        else if (task.status==ONGOING) ongoing ++ ; 
+        else if (task.status==DONE) done ++ ;
     }
     cout <<"TODO: "<<todo <<"\n"<<"ONGOING: "<<ongoing<<"\n"<<"DONE: "<<done<<endl ;
 }
@@ -172,7 +176,7 @@ void report_ongoing(vector<Task> tasks)
     sort(tasks.begin(),tasks.end(),sort_by_priority) ;
     for(Task task : tasks)
     {
-        if(task.status=="ONGOING")
+        if(task.status==ONGOING)
         {
             sort((task.employees).begin(),(task.employees).end(),sort_by_name) ;
             cout<< task.task_name <<" ("<<task.priority<<"): " ;
@@ -195,19 +199,23 @@ void report_ongoing(vector<Task> tasks)
 }
 void report_employee(string employee_name,vector<Employee> employees)
 {
-    int count_task,count_ongoing=0 ; 
+    int count_task=0,count_ongoing=0 ; 
     bool flag = false ; 
 
     for(Employee e:employees)
     {
         if(e.employee_name==employee_name)
         {
-            count_task = (e.tasks).size() ;
+            for(Task task:e.tasks)
+            {
+                if(task.status==DONE) count_task++ ; 
+            }
+            
             cout << employee_name <<" has done "<<count_task<<" tasks."<<"\n" ;
             vector<Task>::const_reverse_iterator it ; 
             for(it=(e.tasks).rbegin();it!=(e.tasks).rend();++it)
             {
-                if(it->status=="ONGOING")
+                if(it->status==ONGOING)
                 {
                     count_ongoing++ ;
                      
