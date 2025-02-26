@@ -129,7 +129,7 @@ void assign_employee (string task_name , string employee_name , vector<Task> &ta
     {
         if(it->task_name == task_name)
         {
-            (it->employees).push_back(employee) ;// beacuse we know it has to be employee in assumption
+            (it->employees).push_back(employee) ;
             it->status=ONGOING ;
             break;
         }
