@@ -12,7 +12,7 @@ typedef struct Task Task  ;
 Task add_task(string task_name ,int priority ) ; 
 Employee add_employee(string employee_name);
 void assign_employee (string task_name , string employee_name , vector<Task> &tasks , vector<Employee> &employee) ;
-void finish_task(string task_name,vector<Task> &tasks);
+void finish_task(string task_name,vector<Task> &tasks,vector<Employee> &Employees);
 void report_all(vector<Task> tasks) ; 
 void report_ongoing(vector<Task> tasks) ; 
 void report_employee(string employee_name,vector<Employee> employees);
@@ -83,7 +83,7 @@ void input_handeling(string line ,vector <Task> &tasks ,vector<Employee> &employ
         {
             ++it ; 
             string arg1 = *it ;
-            finish_task(arg1,tasks);
+            finish_task(arg1,tasks,employes);
         }
         else if(*it==report_name)
         {
@@ -145,7 +145,7 @@ void assign_employee (string task_name , string employee_name , vector<Task> &ta
     }
 
 }
-void finish_task(string task_name,vector<Task> &tasks)
+void finish_task(string task_name,vector<Task> &tasks,vector<Employee> &employees)
 {
     vector<Task>::iterator it ; 
     for(it=tasks.begin();it!=tasks.end();++it)
@@ -154,6 +154,18 @@ void finish_task(string task_name,vector<Task> &tasks)
         {
             it->status=DONE ;
             break;
+        }
+    }
+    vector<Employee>::iterator it_1 ;
+    vector<Task>::iterator it_2 ; 
+    for(it_1 = employees.begin(); it_1!=employees.end();++it_1) 
+    {
+        for(it_2 =it_1->tasks.begin() ; it_2!=it_1->tasks.end();++it_2)
+        {
+            if(it_2->task_name == task_name)
+            {
+                it_2->status = DONE ; 
+            }
         }
     }
 }
@@ -171,7 +183,8 @@ void report_all(vector<Task> tasks)
 void report_ongoing(vector<Task> tasks)
 {
     auto sort_by_priority = [](const Task &task1 , const Task &task2)
-    {return task1.priority<task2.priority;} ; 
+     {if(task1.priority==task2.priority) return task1.task_name < task2.task_name ; 
+    else return task1.priority<task2.priority ;  } ; 
     auto sort_by_name = [](const Employee &e1 , const Employee &e2){return e1.employee_name < e2.employee_name ;} ;
     sort(tasks.begin(),tasks.end(),sort_by_priority) ;
     for(Task task : tasks)
@@ -212,8 +225,8 @@ void report_employee(string employee_name,vector<Employee> employees)
             }
             
             cout << employee_name <<" has done "<<count_task<<" tasks."<<"\n" ;
-            vector<Task>::const_reverse_iterator it ; 
-            for(it=(e.tasks).rbegin();it!=(e.tasks).rend();++it)
+            vector<Task>::const_iterator it ; 
+            for(it=(e.tasks).begin();it!=(e.tasks).end();++it)
             {
                 if(it->status==ONGOING)
                 {
