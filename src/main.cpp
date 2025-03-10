@@ -4,6 +4,7 @@
 #include <map>
 #include <fstream>
 #include <sstream>
+#include <bits/stdc++.h> 
 using namespace std ; 
 
 const string WINDOW = "window" ; 
@@ -16,6 +17,12 @@ typedef struct Students Students ;
 void read_table(char * filepath,map<int,Table> &tables) ; 
 void read_student(char * filepath , map<int,Students> &students_map) ; 
 int find_student_table(int student_id , const map<int,Table> &tables_map) ; 
+map<int,int> calaulate_tables_score(int student_id, const map<int,Table> &tables , const map<int,Students> &students) ; 
+int calculate_one_table_score(const map<int,Table> &tables ,int current_table_id ,int friend_table_id , int enemy_table_id ) ; 
+list<string> sort_students_name(const map<int,Students> &students) ; 
+void show_table_info (int table_id,const map<int,Table> &tables) ;
+bool compare(pair<int,int> &a , pair<int,int>&b) ; 
+void enter(int student_id, const map<int,Table> &tables , const map<int,Students> &students) ;
 
 typedef struct Table
 {
@@ -25,6 +32,7 @@ typedef struct Table
     int capacity ; 
     string type ; 
     map<int,Students> students ; 
+    map<int ,Students> queue_student ; 
 
 }Table ; 
 
@@ -43,6 +51,61 @@ int main(int argc , char * argv[])
     read_table(argv[0],tables) ; 
     read_student(argv[1],students) ; 
     
+}
+void enter(int student_id, const map<int,Table> &tables , const map<int,Students> &students)
+{
+    map<int,int> tables_scores  = calaulate_tables_score(student_id , tables ,students) ;
+    vector<pair<int,int>> tables_scores_pair ; 
+    for(auto& item:tables_scores)
+    {
+        tables_scores_pair.push_back(item) ; 
+    }
+    sort(tables_scores_pair.begin() , tables_scores_pair.end(),compare) ; 
+    for(auto& it : tables_scores_pair)
+    {
+        int table_id = it.first ; 
+        Table table_info  = tables.find(table_id) ->second;
+        int remain_capacity = table_info.capacity-table_info.students.size() ;   
+        cout<<"Table "<<it.first<<": " <<remain_capacity<<" "<<table_info.queue_student.size() ;
+
+    }
+
+}
+bool compare(pair<int,int> &a , pair<int,int>&b)
+{
+    return a.second < b.second ; 
+}
+void reserve_table(vector<int> inputs)
+{
+
+}
+
+
+void show_table_info (int table_id,const map<int,Table> &tables)
+{
+    Table table ; 
+    table = tables.find(table_id)->second ; 
+    int remain_cap_len= table.capacity-table.students.size()  ;
+    int queue_len = table.queue_student.size() ; 
+    cout <<"Table ID: " << table_id <<"\n" ; 
+    list<string> sorted_students_name = sort_students_name(table.students) ; 
+    cout <<"People at the table: " ; 
+    for(auto name:sorted_students_name)
+    {
+        cout<< name ; 
+    }
+    cout<<"\n" <<"Table remaining capacity: "<<remain_cap_len<<"\n"<<"Waiting queue length: "<<queue_len<<endl;
+     
+}
+list<string> sort_students_name(const map<int,Students> &students)
+{
+    list<string> students_list ; 
+    for(auto it=students.begin();it!=students.end();++it)
+    {
+        students_list.push_back(it->second.name);
+    }
+    students_list.sort() ; 
+    return students_list;
 }
 map<int,int> calaulate_tables_score(int student_id, const map<int,Table> &tables , const map<int,Students> &students)
 {
