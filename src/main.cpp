@@ -23,6 +23,7 @@ list<string> sort_students_name(const map<int,Students> &students) ;
 void show_table_info (int table_id,const map<int,Table> &tables) ;
 bool compare(pair<int,int> &a , pair<int,int>&b) ; 
 void enter(int student_id, const map<int,Table> &tables , const map<int,Students> &students) ;
+vector<pair<int,int>> map_to_sorted_vector(const map<int,int>&a ) ;
 
 typedef struct Table
 {
@@ -55,12 +56,8 @@ int main(int argc , char * argv[])
 void enter(int student_id, const map<int,Table> &tables , const map<int,Students> &students)
 {
     map<int,int> tables_scores  = calaulate_tables_score(student_id , tables ,students) ;
-    vector<pair<int,int>> tables_scores_pair ; 
-    for(auto& item:tables_scores)
-    {
-        tables_scores_pair.push_back(item) ; 
-    }
-    sort(tables_scores_pair.begin() , tables_scores_pair.end(),compare) ; 
+    vector<pair<int,int>> tables_scores_pair=map_to_sorted_vector(tables_scores) ; 
+
     for(auto& it : tables_scores_pair)
     {
         int table_id = it.first ; 
@@ -71,13 +68,61 @@ void enter(int student_id, const map<int,Table> &tables , const map<int,Students
     }
 
 }
+vector<pair<int,int>> map_to_sorted_vector(const map<int,int>&a )
+{
+    vector<pair<int,int>> final ; 
+    for(auto & item : a)
+    {
+        final.push_back(item) ; 
+    }
+    sort(final.begin(),final.end(),compare) ; 
+    return final ; 
+}
 bool compare(pair<int,int> &a , pair<int,int>&b)
 {
     return a.second < b.second ; 
 }
-void reserve_table(vector<int> inputs)
+void reserve_table(const vector<int> &inputs,map<int,Table> &tables , const map<int,Students> &students)
 {
+    int length_inputs = inputs.size() ; 
+    int student_id = inputs[0] ; 
+    if(length_inputs==1)
+    {
+        map<int,int> tables_scores  = calaulate_tables_score(student_id , tables ,students) ;
+        vector<pair<int,int>> tables_scores_pair=map_to_sorted_vector(tables_scores) ; 
+        int table_id = tables_scores_pair[0].first ; 
+        int remain_capacity= tables.find(table_id)->second.capacity-tables.find(table_id)->second.students.size() ; 
+        if (remain_capacity>0) 
+        {
+            Students student = students.find(student_id)->second ; 
+            tables.find(table_id)->second.students.insert({student_id ,student}) ;
+            tables.find(table_id)->second.capacity = tables.find(table_id)->second.capacity -1 ;
+        } 
+        else
+        {
+            Students student = students.find(student_id)->second ;
+            tables.find(table_id)->second.queue_student.insert({student_id ,student}) ;
 
+        }
+    }
+    else
+    {
+        int table_id = inputs[1]  ; 
+        int remain_capacity= tables.find(table_id)->second.capacity-tables.find(table_id)->second.students.size() ; 
+        if (remain_capacity>0) 
+        {
+            Students student = students.find(student_id)->second ; 
+            tables.find(table_id)->second.students.insert({student_id ,student}) ;
+            tables.find(table_id)->second.capacity = tables.find(table_id)->second.capacity -1 ;
+        } 
+        else
+        {
+            Students student = students.find(student_id)->second ;
+            tables.find(table_id)->second.queue_student.insert({student_id ,student}) ;
+
+        }
+
+    }
 }
 
 
