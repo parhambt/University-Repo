@@ -10,6 +10,11 @@ using namespace std ;
 const string WINDOW = "window" ; 
 const string DOOR = "door" ; 
 const string MIDDLE = "middle" ; 
+const string SHOW_TABLE_INFO = "show_table_info" ; 
+const string ENTER = "enter" ; 
+const string RESERVER_TABLE = "reserve_table" ; 
+const string EXIT = "exit" ; 
+const string SWITCH = "switch" ; 
 
 typedef struct Table Table ; 
 typedef struct Students Students ; 
@@ -27,6 +32,7 @@ vector<pair<int,int>> map_to_sorted_vector(const map<int,int>&a ) ;
 void reserve_table(const vector<int> &inputs,map<int,Table> &tables , const map<int,Students> &students) ;
 void exit(int student_id,map<int,Table> &tables , map<int,Students>&students) ; 
 void _switch(int student_id,map<int,Table> &tables , map<int,Students>&students) ; 
+void input_handeling(map<int,Table> &tables , map<int,Students>&students) ;
 
 typedef struct Table
 {
@@ -49,6 +55,98 @@ typedef struct Students
 }Students ; 
 
 
+int main(int argc , char * argv[])
+{
+    map<int,Table> tables; 
+    map<int,Students> students ; 
+    read_table(argv[0],tables) ; 
+    read_student(argv[1],students) ; 
+    input_handeling(tables,students) ; 
+    // string line ; 
+    // while(getline(cin,line))
+    // {
+    //     std::regex del(" ")  ;
+    //     sregex_token_iterator it(line.begin(),line.end(),del,-1) ; 
+    //     sregex_token_iterator end ;
+    //     if(*it==SHOW_TABLE_INFO)
+    //     {
+    //         int arg1= stoi(*(++it))  ; 
+    //         show_table_info(arg1 ,tables) ; 
+
+    //     }
+    //     else if(*it==ENTER)
+    //     {
+    //         int arg1= stoi(*(++it))  ; 
+    //         enter(arg1,tables,students) ; 
+    //     }
+    //     else if(*it==RESERVER_TABLE)
+    //     {
+    //         int arg1= stoi(*(++it))  ; 
+    //         vector<int> inputs ={arg1} ; 
+    //         if(it!=end) 
+    //         {
+    //             int arg2 = stoi(*(++it)) ; 
+    //             vector<int> inputs ={arg1,arg2} ;
+    //         }
+    //         reserve_table(inputs ,tables,students) ; 
+    //     }
+    //     else if (*it==EXIT)
+    //     {
+    //         int arg1= stoi(*(++it))  ; 
+    //         exit(arg1,tables,students) ; 
+    //     }
+    //     else if(*it==SWITCH)
+    //     {
+    //         int arg1= stoi(*(++it))  ; 
+    //         _switch(arg1,tables,students);
+    //     }
+    // }
+    
+}
+void input_handeling(map<int,Table> &tables , map<int,Students>&students)
+{
+    string line ; 
+    while(getline(cin,line))
+    {
+        std::regex del(" ")  ;
+        sregex_token_iterator it(line.begin(),line.end(),del,-1) ; 
+        sregex_token_iterator end ;
+        if(*it==SHOW_TABLE_INFO)
+        {
+            int arg1= stoi(*(++it))  ; 
+            show_table_info(arg1 ,tables) ; 
+
+        }
+        else if(*it==ENTER)
+        {
+            int arg1= stoi(*(++it))  ; 
+            enter(arg1,tables,students) ; 
+        }
+        else if(*it==RESERVER_TABLE)
+        {
+            int arg1= stoi(*(++it))  ; 
+            vector<int> inputs ={arg1} ; 
+            if(it!=end) 
+            {
+                int arg2 = stoi(*(++it)) ; 
+                vector<int> inputs ={arg1,arg2} ;
+            }
+            reserve_table(inputs ,tables,students) ; 
+        }
+        else if (*it==EXIT)
+        {
+            int arg1= stoi(*(++it))  ; 
+            exit(arg1,tables,students) ; 
+        }
+        else if(*it==SWITCH)
+        {
+            int arg1= stoi(*(++it))  ; 
+            _switch(arg1,tables,students);
+        }
+    }
+}
+
+
 void _switch(int student_id,map<int,Table> &tables , map<int,Students>&students)
 {
     int student_table_id = find_student_table(student_id ,tables) ; 
@@ -62,15 +160,6 @@ void _switch(int student_id,map<int,Table> &tables , map<int,Students>&students)
     tables.find(friend_table_id)->second.students.insert({student_id,student}) ;
     cout<<student.name<<" switches seats with "<<friend_student.name  ; 
 
-}
-
-int main(int argc , char * argv[])
-{
-    map<int,Table> tables; 
-    map<int,Students> students ; 
-    read_table(argv[0],tables) ; 
-    read_student(argv[1],students) ; 
-    
 }
 void enter(int student_id, const map<int,Table> &tables , const map<int,Students> &students)
 {
@@ -267,6 +356,7 @@ void read_table(char * filepath,map<int,Table> &tables_map)
         tables_map.insert({stoi(ID_string),table}) ;
         
     }
+    tablesFile.close() ; 
 }
 void read_student(char * filepath , map<int,Students> &students_map)
 {
@@ -290,4 +380,5 @@ void read_student(char * filepath , map<int,Students> &students_map)
         students_map.insert({stoi(ID_string),student}) ; 
         
     }
+    studentsFile.close();
 }
