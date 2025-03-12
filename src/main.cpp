@@ -36,7 +36,6 @@ void input_handeling(map<int,Table> &tables , map<int,Students>&students) ;
 
 typedef struct Table
 {
-    // int ID ; 
     int X ; 
     int Y ; 
     int capacity ; 
@@ -47,8 +46,7 @@ typedef struct Table
 }Table ; 
 
 typedef struct Students
-{
-    // int ID ; 
+{ 
     string name ; 
     int friend_id ;
     int enemy_id ;  
@@ -138,7 +136,7 @@ void exit(int student_id,map<int,Table> &tables , map<int,Students>&students)
 {
     int student_table_id  = find_student_table(student_id , tables) ; 
     string student_name = tables[student_table_id].students[student_id].name; 
-    if(tables.find(student_table_id)->second.queue_student.size()==0) // if the queue list is empty we done
+    if(tables.find(student_table_id)->second.queue_student.size()==0) 
     {
         tables.find(student_table_id)->second.students.erase(student_id) ;
         cout <<student_name<<" exits!\n"  ;
@@ -147,13 +145,13 @@ void exit(int student_id,map<int,Table> &tables , map<int,Students>&students)
     tables.find(student_table_id)->second.students.erase(student_id) ;
     int friend_id = students.find(student_id)->second.friend_id ;
     if(tables.find(student_table_id)->second.queue_student.find(friend_id)!=tables.find(student_table_id)->second.queue_student.end())
-    {// if there exist friend in queue list
+    {
         tables.find(student_table_id)->second.queue_student.erase(friend_id) ;
         vector<int> inputs={friend_id,student_table_id} ; 
         reserve_table(inputs , tables,students,-1) ; 
     }
     else
-    { // if there is not any friend in queue list but there is some one in queue list 
+    { 
         int student_id_replace=  tables.find(student_table_id)->second.queue_student.begin()->first ; 
         tables.find(student_table_id)->second.queue_student.erase(student_id_replace) ; 
         vector<int> inputs={student_id_replace,student_table_id} ; 
@@ -181,46 +179,38 @@ bool compare(pair<int,int> &a , pair<int,int>&b)
     }
     return a.second > b.second ; 
 }
+
 void reserve_table(const vector<int> &inputs,map<int,Table> &tables , const map<int,Students> &students,int flag)
 {
     int length_inputs = inputs.size() ; 
-    int student_id = inputs[0] ; 
+    int student_id = inputs[0] ,table_id,remain_capacity; 
+    Students student;
     if(length_inputs==1)
     {
         map<int,int> tables_scores  = calaulate_tables_score(student_id , tables ,students) ;
         vector<pair<int,int>> tables_scores_pair=map_to_sorted_vector(tables_scores) ; 
-        int table_id = tables_scores_pair[0].first ; 
-        int remain_capacity= tables.find(table_id)->second.capacity-tables.find(table_id)->second.students.size() ; 
-        Students student = students.find(student_id)->second ; 
-        if (remain_capacity>0) 
-        {
-            tables.find(table_id)->second.students.insert({student_id ,student}) ;
-            if(flag==0) cout<<student.name<<" sits at table "<<table_id<<"\n" ;
-        } 
-        else
-        {
-            tables.find(table_id)->second.queue_student.insert({student_id ,student}) ;
-            if(flag==0) cout<<student.name<<" enters the waiting queue of table "<<table_id<<"\n" ;
-        }
+        table_id = tables_scores_pair[0].first ; 
+        remain_capacity= tables.find(table_id)->second.capacity-tables.find(table_id)->second.students.size() ; 
+        student = students.find(student_id)->second ; 
     }
     else
     {
-        int table_id = inputs[1]  ; 
-        int remain_capacity= tables.find(table_id)->second.capacity-tables.find(table_id)->second.students.size() ; 
-        Students student = students.find(student_id)->second ; 
-        if (remain_capacity>0) 
-        {
-            tables.find(table_id)->second.students.insert({student_id ,student}) ;
-            if(flag==0) cout<<student.name<<" sits at table "<<table_id<<"\n" ; 
-        } 
-        else
-        {
-            tables.find(table_id)->second.queue_student.insert({student_id ,student}) ;
-            if(flag==0) cout<<student.name<<" enters the waiting queue of table "<<table_id<<"\n" ; 
-        }
+        table_id = inputs[1]  ; 
+        remain_capacity= tables.find(table_id)->second.capacity-tables.find(table_id)->second.students.size() ; 
+        student = students.find(student_id)->second ; 
     }
+    if (remain_capacity>0) 
+    {
+        tables.find(table_id)->second.students.insert({student_id ,student}) ;
+        if(flag==0) cout<<student.name<<" sits at table "<<table_id<<"\n" ; 
+    } 
+    else
+    {
+        tables.find(table_id)->second.queue_student.insert({student_id ,student}) ;
+        if(flag==0) cout<<student.name<<" enters the waiting queue of table "<<table_id<<"\n" ; 
+    }
+    
 }
-
 
 void show_table_info (int table_id,const map<int,Table> &tables)
 {
@@ -298,7 +288,7 @@ int find_student_table(int student_id ,const map<int,Table> &tables_map)
         Table table = it->second ; 
         if(table.students.find(student_id)!=table.students.end()) return it->first   ;
     }
-    return -1 ; // means student does not sit in any table yet 
+    return -1 ; 
 }
 void read_table(char * filepath,map<int,Table> &tables_map)
 {
