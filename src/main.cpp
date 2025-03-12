@@ -34,6 +34,8 @@ void exit(int student_id,map<int,Table> &tables , map<int,Students>&students) ;
 void _switch(int student_id,map<int,Table> &tables , map<int,Students>&students) ; 
 void input_handeling(map<int,Table> &tables , map<int,Students>&students) ;
 
+
+
 typedef struct Table
 {
     int X ; 
@@ -41,7 +43,7 @@ typedef struct Table
     int capacity ; 
     string type ; 
     map<int,Students> students ; 
-    map<int ,Students> queue_student ; 
+    vector<pair<int,Students>> queue_student ; 
 
 }Table ; 
 
@@ -144,16 +146,22 @@ void exit(int student_id,map<int,Table> &tables , map<int,Students>&students)
     }
     tables.find(student_table_id)->second.students.erase(student_id) ;
     int friend_id = students.find(student_id)->second.friend_id ;
-    if(tables.find(student_table_id)->second.queue_student.find(friend_id)!=tables.find(student_table_id)->second.queue_student.end())
+    vector<pair<int,Students>> &temp = tables.find(student_table_id)->second.queue_student ; 
+    auto is_freind= find_if(temp.begin(), temp.end(), 
+        [friend_id](const std::pair<int, Students>& p) { return p.first == friend_id;});
+    if(is_freind!=temp.end())
     {
-        tables.find(student_table_id)->second.queue_student.erase(friend_id) ;
+        temp.erase(remove_if(temp.begin(), temp.end(),
+        [friend_id](const pair<int, Students>& p) { return p.first == friend_id; }), temp.end());
+
         vector<int> inputs={friend_id,student_table_id} ; 
         reserve_table(inputs , tables,students,-1) ; 
     }
     else
     { 
-        int student_id_replace=  tables.find(student_table_id)->second.queue_student.begin()->first ; 
-        tables.find(student_table_id)->second.queue_student.erase(student_id_replace) ; 
+        int student_id_replace=  temp.begin()->first ; 
+        temp.erase(remove_if(temp.begin(), temp.end(),
+        [student_id_replace](const pair<int, Students>& p) { return p.first == student_id_replace; }), temp.end()); 
         vector<int> inputs={student_id_replace,student_table_id} ; 
         reserve_table(inputs , tables,students,-1) ; 
     }
@@ -206,7 +214,7 @@ void reserve_table(const vector<int> &inputs,map<int,Table> &tables , const map<
     } 
     else
     {
-        tables.find(table_id)->second.queue_student.insert({student_id ,student}) ;
+        tables.find(table_id)->second.queue_student.push_back({student_id ,student}) ;
         if(flag==0) cout<<student.name<<" enters the waiting queue of table "<<table_id<<"\n" ; 
     }
     
