@@ -24,7 +24,7 @@ void read_student(char * filepath , map<int,Students> &students_map) ;
 int find_student_table(int student_id , const map<int,Table> &tables_map) ; 
 map<int,int> calaulate_tables_score(int student_id, const map<int,Table> &tables , const map<int,Students> &students) ; 
 int calculate_one_table_score(const map<int,Table> &tables ,int current_table_id ,int friend_table_id , int enemy_table_id ) ; 
-list<string> sort_students_name(const map<int,Students> &students) ; 
+vector<string> sort_students_name(const map<int,Students> &students) ; 
 void show_table_info (int table_id,const map<int,Table> &tables) ;
 bool compare(pair<int,int> &a , pair<int,int>&b) ; 
 void enter(int student_id, const map<int,Table> &tables , const map<int,Students> &students) ;
@@ -74,10 +74,8 @@ void input_handeling(map<int,Table> &tables , map<int,Students>&students)
         sregex_token_iterator end ;
         if(*it==SHOW_TABLE_INFO)
         {
-            
             int arg1= stoi(*(++it))  ; 
             show_table_info(arg1 ,tables) ; 
-
         }
         else if(*it==ENTER)
         {
@@ -87,13 +85,10 @@ void input_handeling(map<int,Table> &tables , map<int,Students>&students)
         else if(*it==RESERVER_TABLE)
         {
             int arg1= stoi(*(++it))  ; 
-            
             vector<int> inputs ={arg1} ; 
-            if(it!=end) 
+            if((++it)!=end) 
             {
-                
-                int arg2 = stoi(*(++it)) ; 
-                
+                int arg2 = stoi(*(it)) ; 
                 inputs ={arg1,arg2} ;
             }
             
@@ -125,35 +120,31 @@ void _switch(int student_id,map<int,Table> &tables , map<int,Students>&students)
     tables.find(student_table_id)->second.students.insert({friend_id,friend_student}) ; 
     tables.find(friend_table_id)->second.students.insert({student_id,student}) ;
     cout<<student.name<<" switches seats with "<<friend_student.name <<"!\n" ; 
-
 }
 void enter(int student_id, const map<int,Table> &tables , const map<int,Students> &students)
 {
     map<int,int> tables_scores  = calaulate_tables_score(student_id , tables ,students) ;
     vector<pair<int,int>> tables_scores_pair=map_to_sorted_vector(tables_scores) ; 
-
     for(auto& it : tables_scores_pair)
     {
         int table_id = it.first ; 
         Table table_info  = tables.find(table_id) ->second;
         int remain_capacity = table_info.capacity-table_info.students.size() ;   
         cout<<"Table "<<it.first<<": " <<remain_capacity<<" "<<table_info.queue_student.size()<<"\n" ;
-
     }
-
 }
 
 void exit(int student_id,map<int,Table> &tables , map<int,Students>&students)
 {
     int student_table_id  = find_student_table(student_id , tables) ; 
     string student_name = tables[student_table_id].students[student_id].name; 
-    
-    tables.find(student_table_id)->second.students.erase(student_id) ;
-    if(tables.find(student_table_id)->second.queue_student.size()==0)
+    if(tables.find(student_table_id)->second.queue_student.size()==0) // if the queue list is empty we done
     {
+        tables.find(student_table_id)->second.students.erase(student_id) ;
         cout <<student_name<<" exits!\n"  ;
         return ; 
     }
+    tables.find(student_table_id)->second.students.erase(student_id) ;
     int friend_id = students.find(student_id)->second.friend_id ;
     if(tables.find(student_table_id)->second.queue_student.find(friend_id)!=tables.find(student_table_id)->second.queue_student.end())
     {// if there exist friend in queue list
@@ -162,14 +153,12 @@ void exit(int student_id,map<int,Table> &tables , map<int,Students>&students)
         reserve_table(inputs , tables,students,-1) ; 
     }
     else
-    { // if there is not any friend
+    { // if there is not any friend in queue list but there is some one in queue list 
         int student_id_replace=  tables.find(student_table_id)->second.queue_student.begin()->first ; 
         tables.find(student_table_id)->second.queue_student.erase(student_id_replace) ; 
         vector<int> inputs={student_id_replace,student_table_id} ; 
         reserve_table(inputs , tables,students,-1) ; 
-
     }
-    
     cout <<student_name<<" exits!\n" ; 
 }
 
@@ -186,6 +175,10 @@ vector<pair<int,int>> map_to_sorted_vector(const map<int,int>&a )
 }
 bool compare(pair<int,int> &a , pair<int,int>&b)
 {
+    if (a.second==b.second)
+    {
+        return a.first < b.first ; 
+    }
     return a.second > b.second ; 
 }
 void reserve_table(const vector<int> &inputs,map<int,Table> &tables , const map<int,Students> &students,int flag)
@@ -199,12 +192,9 @@ void reserve_table(const vector<int> &inputs,map<int,Table> &tables , const map<
         int table_id = tables_scores_pair[0].first ; 
         int remain_capacity= tables.find(table_id)->second.capacity-tables.find(table_id)->second.students.size() ; 
         Students student = students.find(student_id)->second ; 
-
         if (remain_capacity>0) 
         {
-            
             tables.find(table_id)->second.students.insert({student_id ,student}) ;
-            
             if(flag==0) cout<<student.name<<" sits at table "<<table_id<<"\n" ;
         } 
         else
@@ -215,23 +205,18 @@ void reserve_table(const vector<int> &inputs,map<int,Table> &tables , const map<
     }
     else
     {
-        
         int table_id = inputs[1]  ; 
         int remain_capacity= tables.find(table_id)->second.capacity-tables.find(table_id)->second.students.size() ; 
         Students student = students.find(student_id)->second ; 
-
         if (remain_capacity>0) 
         {
             tables.find(table_id)->second.students.insert({student_id ,student}) ;
-
             if(flag==0) cout<<student.name<<" sits at table "<<table_id<<"\n" ; 
-            
         } 
         else
         {
             tables.find(table_id)->second.queue_student.insert({student_id ,student}) ;
             if(flag==0) cout<<student.name<<" enters the waiting queue of table "<<table_id<<"\n" ; 
-            
         }
     }
 }
@@ -242,32 +227,32 @@ void show_table_info (int table_id,const map<int,Table> &tables)
     Table table ; 
     table = tables.find(table_id)->second ; 
     int remain_cap_len= table.capacity-table.students.size()  ;
-    if(remain_cap_len<0) remain_cap_len=0 ; 
-    int queue_len = table.queue_student.size() ; 
+    
+    int queue_len = table.queue_student.size()  ; 
     cout <<"Table ID: " << table_id <<"\n" ; 
-    list<string> sorted_students_name = sort_students_name(table.students) ; 
+    
+    vector<string> sorted_students_name = sort_students_name(table.students) ; 
     cout <<"People at the table:" ; 
-    // for(auto name:sorted_students_name)
-    if (!sorted_students_name.empty()) 
-    {
-        for(auto it=sorted_students_name.begin();it!=prev(sorted_students_name.end());++it)
-        {
-            
+    
+    if(sorted_students_name.empty()==false)
+    {    
+        for(auto it=sorted_students_name.begin();it!=sorted_students_name.end()-1;++it)
+        {   
             cout<<" "<<*it<<"," ; 
         }
-        cout<<sorted_students_name.back() ;
+        cout<<" "<<sorted_students_name.back() ;
     }
+    
     cout<<"\n" <<"Table remaining capacity: "<<remain_cap_len<<"\n"<<"Waiting queue length: "<<queue_len<<endl;
-     
 }
-list<string> sort_students_name(const map<int,Students> &students)
+vector<string> sort_students_name(const map<int,Students> &students)
 {
-    list<string> students_list ; 
+    vector<string> students_list ; 
     for(auto it=students.begin();it!=students.end();++it)
     {
         students_list.push_back(it->second.name);
     }
-    students_list.sort() ; 
+    sort(students_list.begin(),students_list.end()) ; 
     return students_list;
 }
 map<int,int> calaulate_tables_score(int student_id, const map<int,Table> &tables , const map<int,Students> &students)
@@ -282,9 +267,7 @@ map<int,int> calaulate_tables_score(int student_id, const map<int,Table> &tables
     {
         tables_scores.insert({it->first,calculate_one_table_score(tables , it->first , friend_table_id,enemy_table_id)}) ; 
     }
-    return tables_scores ; 
-
-    
+    return tables_scores ;     
 }
 int calculate_one_table_score(const map<int,Table> &tables ,int current_table_id ,int friend_table_id , int enemy_table_id )
 {
@@ -322,28 +305,21 @@ void read_table(char * filepath,map<int,Table> &tables_map)
     ifstream tablesFile(filepath);
     string line ; 
     getline(tablesFile , line) ; 
-    
     while(getline(tablesFile , line))
     {
         Table table ;
-        
         string ID_string , X_string , Y_string , capacity_string ;  
         istringstream current_line(line) ;
         getline(current_line ,ID_string,',' ) ; 
         getline(current_line , X_string,',') ; 
         getline(current_line,Y_string,',') ; 
         getline(current_line , capacity_string ,',') ; 
-
         getline(current_line , table.type ) ; 
-        
         table.X= stoi(X_string) ; 
         table.Y = stoi(Y_string) ; 
         table.capacity = stoi(capacity_string) ; 
-        
         tables_map.insert({stoi(ID_string),table}) ;
-        
     }
-    
     tablesFile.close() ; 
 }
 void read_student(char * filepath , map<int,Students> &students_map)
@@ -362,10 +338,7 @@ void read_student(char * filepath , map<int,Students> &students_map)
         getline(current_line , enemy_id_string ) ; 
         student.friend_id= stoi(friend_id_string) ; 
         student.enemy_id = stoi(enemy_id_string) ; 
-         
         students_map.insert({stoi(ID_string),student}) ; 
-        
     }
     studentsFile.close();
-    
 }
