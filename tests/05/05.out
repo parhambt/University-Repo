@@ -1,0 +1,22 @@
+Paria sits at table 3
+Table ID: 3
+People at the table: Paria
+Table remaining capacity: 1
+Waiting queue length: 0
+Table 1: 4 0
+Table 2: 4 0
+Table 5: 3 0
+Table 6: 3 0
+Table 3: 1 0
+Table 4: 2 0
+Bob sits at table 1
+Paria switches seats with Bob!
+Table ID: 3
+People at the table: Bob
+Table remaining capacity: 1
+Waiting queue length: 0
+Paria exits!
+Table ID: 1
+People at the table:
+Table remaining capacity: 4
+Waiting queue length: 0
