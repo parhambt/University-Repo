@@ -1,7 +1,7 @@
 #include <iostream>
 
 using namespace std ; 
-string latex_fraction(int n,string answer="",int count=0);
+string latex_fraction(int n,string answer="",int count=1,int number=1);
 
 int main()
 {
@@ -10,14 +10,15 @@ int main()
     string a = latex_fraction(n);
     cout<<a<<endl ;
 }
-string latex_fraction(int n,string answer,int count)
+string latex_fraction(int n,string answer,int count,int number)
 {
-    if(n==count) return answer;
-    if(count==0)
+    if(n==count) return to_string(number);
+    if(n==1)
     {
-        answer=answer+"1";
+        return to_string(number);
     }
-    string numerator=latex_fraction(2*count,answer,count+1);
-    string denumerator=latex_fraction((2*count)+1,answer,count+1);
-    return answer+to_string(count)+"+\frac{"+numerator+"}{"+denumerator+"}";
+    if(count==1) answer=answer+to_string(number);
+    string numerator=latex_fraction(n,answer,count+1,number*2);
+    string denumerator=latex_fraction(n,answer,count+1,(number*2)+1);
+    return to_string(number)+"+\\frac{"+numerator+"}{"+denumerator+"}";
 }
