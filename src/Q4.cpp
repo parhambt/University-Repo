@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 using namespace std ; 
 
 const char SEA='~' ; 
@@ -9,6 +10,9 @@ const vector<char> LANDS = {'0','1','2','3','4','5','6','7','8','9'} ;
 
 vector<string> input_handelling(pair<int,int> &max_row_col);
 vector<pair<int,int>> find_land_index(const vector<string> &map,char target,pair<int,int> max_row_col,vector<pair<int,int>> &answer,int row=0,int col=0) ;
+void find_path(const vector<string> &map , vector<pair<int,int>> &targget_land_index ,pair<int,int> max_row_col,pair<int,int> current_index,char target,vector<vector<pair<int,int>>> &all_direction , vector<pair<int,int>> &one_direction,vector<pair<int,int>> &block_index) ;
+bool is_avaleble_direction(const vector<string> &map,vector<char> possible_path,pair<int,int> possible_next_direction);
+vector<char> find_possible_place(pair<int,int> current_index,const vector<string> &map,char target);
 
 int main()
 {
@@ -17,49 +21,97 @@ int main()
     // map = input_handelling(max_row_col) ; 
     map = {"00111","#~%2~","0~~~~","~~%22","11222"} ;
     vector<pair<int,int>> answer ;
-    auto a= find_land_index(map,'0',max_row_col,answer) ;
+    vector<vector<pair<int,int>>> all_direction ; 
+    vector<pair<int,int>> one_direction,block_index ; 
+    auto target_land_index= find_land_index(map,'0',max_row_col,answer) ;
+    find_path(map,target_land_index,max_row_col,target_land_index[0],'0',all_direction,one_direction,block_index) ;
+    int b ; 
     
 
 
 }
-void find_path(const vector<string> &map , const vector<pair<int,int>> &targget_land_index ,pair<int,int> max_row_col,pair<int,int> current_index,char target,vector<vector<pair<int,int>>> all_direction , vector<pair<int,int>> one_direction)
+void find_path(const vector<string> &map , vector<pair<int,int>> &targget_land_index ,pair<int,int> max_row_col,pair<int,int> current_index,char target,vector<vector<pair<int,int>>> &all_direction , vector<pair<int,int>> &one_direction,vector<pair<int,int>> &block_index)
 {
+    if(targget_land_index.empty()) return ; 
     vector<char> possible_path=find_possible_place(current_index,map,target) ;
+    bool is_end = true ; 
     if(possible_path.empty()) 
     {
+        
         all_direction.push_back(one_direction) ; 
-        return ;
+        vector<pair<int,int>> new_one_direction,new_block_index ; 
+        find_path(map,targget_land_index,max_row_col,targget_land_index[0],target,all_direction,new_one_direction,new_block_index) ;
     }
+
+    auto is_target_land_contain_current_index = find_if(targget_land_index.begin(),targget_land_index.end(),[current_index]
+    (const pair<int,int> &x){
+        if(x==current_index) return true ;
+        else return false;}
+    );
+    if(is_target_land_contain_current_index!=targget_land_index.end()) targget_land_index.erase(is_target_land_contain_current_index) ; 
+
+    block_index.push_back(current_index) ;
+
+
+
+
     one_direction.push_back(current_index) ;
+
+
     pair<int,int> possible_next_direction ; 
-    auto is_invalid_index = [&possible_next_direction](pair<int,int> current_index,pair<int,int> add_direction,const pair<int,int> &max_row_col)
+    auto is_block_index = find_if(block_index.begin(),block_index.end(),[possible_next_direction]
+    (const pair<int,int> &x){
+        if(x==possible_next_direction) return true ;
+        else return false;}
+    );
+    auto is_invalid_index = [&possible_next_direction,block_index,is_block_index](pair<int,int> current_index,pair<int,int> add_direction,const pair<int,int> &max_row_col)
     {
         current_index.first +=add_direction.first ; 
         current_index.second+=add_direction.second ; 
         possible_next_direction=current_index ;
+        if(is_block_index!=block_index.end()) return false ;
         if(current_index.first>=0 && current_index.second>=0 && current_index.first<max_row_col.first && current_index.second<max_row_col.second) return true;
         else return false ; 
     };
+    
     if(is_invalid_index(current_index,make_pair(0,1),max_row_col))
     {
         if(is_avaleble_direction(map,possible_path,possible_next_direction)) 
-            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction) ;
+        {
+            is_end=false ; 
+            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction,block_index) ;
+        }
 
     }
     if(is_invalid_index(current_index,make_pair(1,0),max_row_col))
-    {
+    {        
         if(is_avaleble_direction(map,possible_path,possible_next_direction)) 
-            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction) ;   
+        {
+            is_end=false ; 
+            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction,block_index) ;
+        } 
     }
     if(is_invalid_index(current_index,make_pair(0,-1),max_row_col))
     {
         if(is_avaleble_direction(map,possible_path,possible_next_direction)) 
-            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction) ;       
+        {
+            is_end=false ; 
+            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction,block_index) ;
+        }       
     }
     if(is_invalid_index(current_index,make_pair(-1,0),max_row_col))
     {
         if(is_avaleble_direction(map,possible_path,possible_next_direction)) 
-            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction) ;        
+        {
+            is_end=false ; 
+            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction,block_index) ;
+        }     
+    }
+    if(is_end) 
+    {
+        all_direction.push_back(one_direction) ; 
+        vector<pair<int,int>> new_one_direction , new_block_index ; 
+        find_path(map,targget_land_index,max_row_col,targget_land_index[0],target,all_direction,new_one_direction,new_block_index) ;
     }
 
     
