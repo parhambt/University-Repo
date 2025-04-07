@@ -18,16 +18,66 @@ int main()
     map = {"00111","#~%2~","0~~~~","~~%22","11222"} ;
     vector<pair<int,int>> answer ;
     auto a= find_land_index(map,'0',max_row_col,answer) ;
-    int b ; 
+    
 
 
 }
-void find_direction(const vector<string> &map , const vector<pair<int,int>> &targget_land_index ,pair<int,int> current_index,char target,vector<vector<pair<int,int>>> all_direction , vector<pair<int,int>> one_direction)
+void find_path(const vector<string> &map , const vector<pair<int,int>> &targget_land_index ,pair<int,int> max_row_col,pair<int,int> current_index,char target,vector<vector<pair<int,int>>> all_direction , vector<pair<int,int>> one_direction)
 {
-    vector<char> possible_path=find_possible_path(current_index,map,target) ;
-    if()
+    vector<char> possible_path=find_possible_place(current_index,map,target) ;
+    if(possible_path.empty()) 
+    {
+        all_direction.push_back(one_direction) ; 
+        return ;
+    }
+    one_direction.push_back(current_index) ;
+    pair<int,int> possible_next_direction ; 
+    auto is_invalid_index = [&possible_next_direction](pair<int,int> current_index,pair<int,int> add_direction,const pair<int,int> &max_row_col)
+    {
+        current_index.first +=add_direction.first ; 
+        current_index.second+=add_direction.second ; 
+        possible_next_direction=current_index ;
+        if(current_index.first>=0 && current_index.second>=0 && current_index.first<max_row_col.first && current_index.second<max_row_col.second) return true;
+        else return false ; 
+    };
+    if(is_invalid_index(current_index,make_pair(0,1),max_row_col))
+    {
+        if(is_avaleble_direction(map,possible_path,possible_next_direction)) 
+            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction) ;
+
+    }
+    if(is_invalid_index(current_index,make_pair(1,0),max_row_col))
+    {
+        if(is_avaleble_direction(map,possible_path,possible_next_direction)) 
+            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction) ;   
+    }
+    if(is_invalid_index(current_index,make_pair(0,-1),max_row_col))
+    {
+        if(is_avaleble_direction(map,possible_path,possible_next_direction)) 
+            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction) ;       
+    }
+    if(is_invalid_index(current_index,make_pair(-1,0),max_row_col))
+    {
+        if(is_avaleble_direction(map,possible_path,possible_next_direction)) 
+            find_path(map,targget_land_index,max_row_col,possible_next_direction,target,all_direction,one_direction) ;        
+    }
+
+    
+
 }
-vector<char> find_possible_path(pair<int,int> current_index,const vector<string> &map,char target)
+bool is_avaleble_direction(const vector<string> &map,vector<char> possible_path,pair<int,int> possible_next_direction)
+{   
+    if(possible_path.size()==1) 
+    {
+        if(map[possible_next_direction.first][possible_next_direction.second]==possible_path[0]) return true ;
+        else return false ; 
+    } 
+    if(map[possible_next_direction.first][possible_next_direction.second]==possible_path[0]) return true ;
+    possible_path.erase(possible_path.begin()) ;
+    return is_avaleble_direction(map,possible_path,possible_next_direction) ;
+
+}
+vector<char> find_possible_place(pair<int,int> current_index,const vector<string> &map,char target)
 {
     vector<char> avaleble_path ; 
     auto is_land=[](pair<int,int> current_index , const vector<string> &map)
