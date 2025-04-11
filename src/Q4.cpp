@@ -10,9 +10,11 @@ const vector<char> LANDS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 vector<string> input_handelling(pair<int, int> &max_row_col);
 vector<pair<int, int>> find_land_index(const vector<string> &map, char target, pair<int, int> max_row_col, vector<pair<int, int>> &answer, int row = 0, int col = 0);
-void find_path(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index,pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index,bool is_target_land_use=false);
+void find_path(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index,pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index,int &bset_land_size);
 bool is_avaleble_direction(const vector<string> &map, vector<char> possible_path, pair<int, int> possible_next_direction);
 vector<char> find_possible_place(pair<int, int> current_index, const vector<string> &map, char target);
+int find_land_size(const vector<string>&map,const vector<pair<int, int>> &one_direction , char target,int index=0) ;
+void output_handelling(const vector<string> &map,vector<vector<pair<int, int>>>&all_direction,const pair<int, int> &max_row_col);
 
 int main()
 {
@@ -20,16 +22,27 @@ int main()
     pair<int, int> max_row_col = make_pair(5, 5);
     // map = input_handelling(max_row_col) ;
     map = {"00111", "#~%2~", "0~~~~", "~~%22", "11222"};
-    vector<pair<int, int>> answer;
+
     vector<vector<pair<int, int>>> all_direction;
-    vector<pair<int, int>> one_direction, block_index;
-    bool is_end=true ; 
-    auto target_land_index = find_land_index(map, '2', max_row_col, answer);
-    
-    find_path(map, target_land_index, max_row_col, target_land_index[0],target_land_index[0], '2', all_direction, one_direction, block_index,false);
-    int b;
+    output_handelling(map,all_direction,max_row_col) ; 
 }
-void find_path(const vector<string> &map,  vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index,pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index,bool is_target_land_use)
+void output_handelling(const vector<string> &map,vector<vector<pair<int, int>>>&all_direction,const pair<int, int> &max_row_col)
+{
+    
+    for(char i='0' ;i<='9' ; i++)
+    {
+        vector<pair<int, int>> land;
+        vector<pair<int, int>> one_direction, block_index;
+        int best_land_size = 0 ;
+        auto target_land_index = find_land_index(map, i, max_row_col, land);
+        if(target_land_index.empty()!=true)
+            find_path(map, target_land_index, max_row_col, target_land_index[0],target_land_index[0], i, all_direction, one_direction, block_index,best_land_size);
+        if(i!='9') cout<<best_land_size<<endl ; 
+        else cout<<best_land_size ;
+
+    }
+}
+void find_path(const vector<string> &map,  vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index,pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index,int &bset_land_size)
 {
 
     if(targget_land_index.empty() ) return ; 
@@ -72,7 +85,7 @@ void find_path(const vector<string> &map,  vector<pair<int, int>> &targget_land_
         if (is_avaleble_direction(map, possible_path, possible_next_direction))
         {
             is_end = false ; 
-            find_path(map, targget_land_index, max_row_col, possible_next_direction,start_index, target, all_direction, one_direction, block_index,true);
+            find_path(map, targget_land_index, max_row_col, possible_next_direction,start_index, target, all_direction, one_direction, block_index,bset_land_size);
   
         }
     }
@@ -82,7 +95,7 @@ void find_path(const vector<string> &map,  vector<pair<int, int>> &targget_land_
         if (is_avaleble_direction(map, possible_path, possible_next_direction))
         {
             is_end = false ; 
-            find_path(map, targget_land_index, max_row_col, possible_next_direction,start_index, target, all_direction, one_direction, block_index,true);
+            find_path(map, targget_land_index, max_row_col, possible_next_direction,start_index, target, all_direction, one_direction, block_index,bset_land_size);
 
         }
     }
@@ -92,7 +105,7 @@ void find_path(const vector<string> &map,  vector<pair<int, int>> &targget_land_
         if (is_avaleble_direction(map, possible_path, possible_next_direction))
         {
             is_end = false ; 
-            find_path(map, targget_land_index, max_row_col, possible_next_direction,start_index, target, all_direction, one_direction, block_index,true);
+            find_path(map, targget_land_index, max_row_col, possible_next_direction,start_index, target, all_direction, one_direction, block_index,bset_land_size);
 
         }
     }
@@ -102,26 +115,29 @@ void find_path(const vector<string> &map,  vector<pair<int, int>> &targget_land_
         if (is_avaleble_direction(map, possible_path, possible_next_direction))
         {
             is_end =false ;
-            find_path(map, targget_land_index, max_row_col, possible_next_direction,start_index, target, all_direction, one_direction, block_index,true);
+            find_path(map, targget_land_index, max_row_col, possible_next_direction,start_index, target, all_direction, one_direction, block_index,bset_land_size);
             
         }
     }
     if(map[current_index.first][current_index.second]==target && is_end)
         all_direction.push_back(one_direction) ; 
+        int land_size =  find_land_size(map,one_direction,target,0) ; 
+        if(land_size>bset_land_size) bset_land_size=land_size ; 
+    
     one_direction.pop_back();
     block_index.pop_back();
     if( current_index==start_index) 
-        find_path(map, targget_land_index, max_row_col, targget_land_index[0],targget_land_index[0], target, all_direction, one_direction, block_index,false);
+        find_path(map, targget_land_index, max_row_col, targget_land_index[0],targget_land_index[0], target, all_direction, one_direction, block_index,bset_land_size);
 
 
 }
-int find_best_size_land(const vector<string>&map,const vector<pair<int, int>> &one_direction , char target,int index)
+int find_land_size(const vector<string>&map,const vector<pair<int, int>> &one_direction , char target,int index)
 {
     if(index==one_direction.size()) return 0 ; 
     int row = one_direction[index].first ;  
     int col =  one_direction[index].second ; 
-    if(map[row][col]==target) return 1+find_best_size_land(map,one_direction,target,index+1) ; 
-    else return find_best_size_land(map,one_direction,target,index+1) ; 
+    if(map[row][col]==target) return 1+find_land_size(map,one_direction,target,index+1) ; 
+    else return find_land_size(map,one_direction,target,index+1) ; 
 
 }
 
