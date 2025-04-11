@@ -93,9 +93,7 @@ void find_path(const vector<string> &map,  vector<pair<int, int>> &targget_land_
         {
             is_end = false ; 
             find_path(map, targget_land_index, max_row_col, possible_next_direction,start_index, target, all_direction, one_direction, block_index,true);
-             
 
-             
         }
     }
     // Up
@@ -113,10 +111,21 @@ void find_path(const vector<string> &map,  vector<pair<int, int>> &targget_land_
     one_direction.pop_back();
     block_index.pop_back();
     if( current_index==start_index) 
-    find_path(map, targget_land_index, max_row_col, targget_land_index[0],targget_land_index[0], target, all_direction, one_direction, block_index,false);
+        find_path(map, targget_land_index, max_row_col, targget_land_index[0],targget_land_index[0], target, all_direction, one_direction, block_index,false);
 
 
 }
+int find_best_size_land(const vector<string>&map,const vector<pair<int, int>> &one_direction , char target,int index)
+{
+    if(index==one_direction.size()) return 0 ; 
+    int row = one_direction[index].first ;  
+    int col =  one_direction[index].second ; 
+    if(map[row][col]==target) return 1+find_best_size_land(map,one_direction,target,index+1) ; 
+    else return find_best_size_land(map,one_direction,target,index+1) ; 
+
+}
+
+
 
 bool is_avaleble_direction(const vector<string> &map, vector<char> possible_path, pair<int, int> possible_next_direction)
 {
