@@ -7,6 +7,8 @@ const int TAX=10 ;
 void input_handelling(map<string,int> &info,map<string,int> &menu_map , vector<string> &menu_list);
 int sumBill(map<string,int> menu , vector<string> input,bool &flag,map<string,int> count_item)  ; 
 void allPosibelityOrder(map<string,int> &menu_map,vector<string> menu_list,vector<pair<vector<string>,int>> &all_posiblities,vector<string> possibelity={},int possibelity_price=0) ;
+pair<int,int> findBoundPrice( map<string,int> &info) ; 
+void checkCondition(map<string,int> info,map<string,int> menu_map , const vector<pair<vector<string>,int>> &all_posiblities,pair<int,int> price_bound,pair<vector<string>,int> &answer, int index ) ; 
 
 int main()
 {
@@ -33,9 +35,13 @@ void allPosibelityOrder(map<string,int> &menu_map,vector<string> menu_list,vecto
     allPosibelityOrder(menu_map,menu_list,all_posiblities,possibelity,possibelity_price+price_target);
 
 }
-vector<string> checkMaxDiscountCondition(map<string,int> info,map<string,int> menu , const vector<string> &input1,const vector<string> &input2  )
+void checkCondition(map<string,int> info,map<string,int> menu_map , const vector<pair<vector<string>,int>> &all_posiblities,pair<int,int> price_bound,pair<vector<string>,int> &answer, int index )
 {
-
+    if(index == all_posiblities.size()) return ; 
+    int bill =all_posiblities[index].second ; 
+    bill += bill/10 ; 
+    if(bill>=price_bound.first && bill<=price_bound.second && bill>answer.second) answer = all_posiblities[index] ; 
+    checkCondition(info , menu_map , all_posiblities , price_bound , answer , index+1) ; 
 
 }
 pair<int,int> findBoundPrice( map<string,int> &info)
