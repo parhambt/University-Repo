@@ -6,6 +6,7 @@ const int TAX=10 ;
 
 void input_handelling(map<string,int> &info,map<string,int> &menu_map , vector<string> &menu_list);
 int sumBill(map<string,int> menu , vector<string> input,bool &flag,map<string,int> count_item)  ; 
+void allPosibelityOrder(vector<string> menu_list,vector<vector<string>> &all_posibelities,vector<string> possibelity={}) ;
 
 int main()
 {
@@ -13,6 +14,23 @@ int main()
     map<string,int> menu_map ;
     vector<string> menu_list ; 
     input_handelling(info,menu_map,menu_list);
+
+
+}
+void allPosibelityOrder(vector<string> menu_list,vector<vector<string>> &all_posibelities,vector<string> possibelity)
+{
+    if(menu_list.empty())
+    {
+        all_posibelities.push_back(possibelity) ; 
+        return ; 
+    }
+     
+    string target = menu_list[0] ;
+    menu_list.erase(menu_list.begin());
+    allPosibelityOrder(menu_list,all_posibelities,possibelity);
+    possibelity.push_back(target);
+    allPosibelityOrder(menu_list,all_posibelities,possibelity);
+
 }
 
 
