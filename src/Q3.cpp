@@ -5,6 +5,7 @@ using namespace std ;
 const int TAX=10 ;
 
 void input_handelling(map<string,int> &info,map<string,int> &menu_map , vector<string> &menu_list);
+int sumBill(map<string,int> menu , vector<string> input,bool &flag,map<string,int> count_item)  ; 
 
 int main()
 {
@@ -16,7 +17,22 @@ int main()
 
 
 
+int sumBill(map<string,int> menu , vector<string> input,bool &flag,map<string,int> count_item)
+{
+    if(input.size()==1)
+    {
+        string item = input[0] ;
+        return menu[item] ;
+    }
+    string item = input[0] ; 
+    
+    if(count_item.find(item)!=count_item.end()) flag=false ;
+    count_item.insert({item,1}) ;
 
+    input.erase(input.begin());
+    return menu[item]+sumBill(menu,input,flag,count_item);
+
+}
 void input_handelling(map<string,int> &info,map<string,int> &menu_map , vector<string> &menu_list)
 {
     int n,x,l,r ; 
