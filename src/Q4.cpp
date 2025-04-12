@@ -21,7 +21,7 @@ void move(const vector<string> &map, vector<pair<int, int>> &targget_land_index,
 int main()
 {
     vector<string> map;
-    pair<int, int> max_row_col = make_pair(5, 5);
+    pair<int, int> max_row_col;
     map = input_handelling(max_row_col) ;
     // map = {"00111", "#~%2~", "0~~~~", "~~%22", "11222"};
 
@@ -39,10 +39,9 @@ void output_handelling(const vector<string> &map, vector<vector<pair<int, int>>>
         auto target_land_index = find_land_index(map, i, max_row_col, land);
         if (target_land_index.empty() != true)
             find_path(map, target_land_index, max_row_col, target_land_index[0], target_land_index[0], i, all_direction, one_direction, block_index, best_land_size);
-        if (i != '9')
-            cout << best_land_size << endl;
-        else
-            cout << best_land_size;
+        
+        cout << best_land_size << endl;
+
     }
 }
 void find_path(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, int &bset_land_size)
@@ -50,8 +49,8 @@ void find_path(const vector<string> &map, vector<pair<int, int>> &targget_land_i
     if (targget_land_index.empty())
         return;
     bool is_end = true;
-    if (find(targget_land_index.begin(), targget_land_index.end(), current_index) != targget_land_index.end())
-        targget_land_index.erase(find(targget_land_index.begin(), targget_land_index.end(), current_index));
+    // if (find(targget_land_index.begin(), targget_land_index.end(), current_index) != targget_land_index.end())
+    //     targget_land_index.erase(find(targget_land_index.begin(), targget_land_index.end(), current_index));
 
     if (find(block_index.begin(), block_index.end(), current_index) != block_index.end())
         return;
@@ -67,13 +66,16 @@ void find_path(const vector<string> &map, vector<pair<int, int>> &targget_land_i
     one_direction.pop_back();
     block_index.pop_back();
     if (current_index == start_index)
-        find_path(map, targget_land_index, max_row_col, targget_land_index[0], targget_land_index[0], target, all_direction, one_direction, block_index, bset_land_size);
+    {
+        targget_land_index.erase(targget_land_index.begin()) ; 
+        find_path(map, targget_land_index, max_row_col, targget_land_index[0], targget_land_index[0], target, all_direction, one_direction, block_index, bset_land_size) ; 
+    }
 }
 void move(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, int &bset_land_size,bool &is_end)
 {
     pair<int, int> possible_next_direction;
     vector<char> possible_path = find_possible_place(current_index, map, target);
-    for(auto& direction:DIRECTIONS)
+    for(auto& direction:DIRECTIONS)// Up - Right - Down - Left
     {
         if (evaluate_index(possible_next_direction, block_index, current_index, direction, max_row_col))
         
