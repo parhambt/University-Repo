@@ -10,13 +10,10 @@ void output_handelling(const vector<pair<int,int>>&moneys);
 int main()
 {
     vector<int> ages;
-    
     vector<pair<int,int>> money;
-    //in first index of pair is him money can be given to some one else and the seconed index can not given to any one
     input_handelling(ages,money);
     distribute_money(ages, money, 0, ages.size()-1);
     output_handelling(money);
-
 }
 
 void distribute_money(const vector<int>& ages, vector<pair<int,int>> &money, int start, int end) {
@@ -62,7 +59,7 @@ int find_oldest_index(const vector<int> &ages, int start_index, int end_index,in
 }
 int find_lesser_itself_biggest_other(const vector<int>& ages, int compare_value, int start_index, int end_index,int biggest_index)
 {
-    if(start_index>end_index) return biggest_index ; // -1 means there is no number with that condition
+    if(start_index>end_index) return biggest_index ;
     if(biggest_index==-1)
     {
         if(compare_value>ages[start_index]) biggest_index=start_index ;
@@ -99,4 +96,5 @@ void output_handelling(const vector<pair<int,int>>&moneys)
         else cout<<money.first+money.second<<" ";
         i++;
     }
+    cout<<endl ; 
 }
