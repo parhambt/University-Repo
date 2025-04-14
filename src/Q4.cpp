@@ -11,14 +11,15 @@ const char ZERO = '0' ;
 const char NINE='9' ; 
 vector<string> input_handelling(pair<int, int> &max_row_col);
 vector<pair<int, int>> find_land_index(const vector<string> &map, char target, pair<int, int> max_row_col, vector<pair<int, int>> &answer, int row = 0, int col = 0);
-void find_path(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, int &bset_land_size);
+void find_path(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, vector<vector<pair<int,int>>> &optimal_land, int optimal_land_index=0);
 bool is_avaleble_direction(const vector<string> &map, vector<char> possible_path, pair<int, int> possible_next_direction);
 vector<char> find_possible_place(pair<int, int> current_index, const vector<string> &map, char target);
 int find_land_size(const vector<string> &map, const vector<pair<int, int>> &one_direction, char target, int index = 0);
 void output_handelling(const vector<string> &map, vector<vector<pair<int, int>>> &all_direction, const pair<int, int> &max_row_col);
 bool evaluate_index(pair<int, int> &possible_next_direction, const vector<pair<int, int>> &block_index, pair<int, int> current_index, pair<int, int> add_direction, const pair<int, int> &max_row_col);
-void move(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, int &bset_land_size,bool &is_end);
+void move(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, vector<vector<pair<int,int>>> &optimal_land , int optimal_land_index,bool &is_end) ; 
 bool is_land(pair<int, int> current_index, const vector<string> &map) ;
+int find_best_land_size(const vector<vector<pair<int,int>>> &optimal_land , int answer , int index) ; 
 
 int main()
 {
@@ -28,58 +29,53 @@ int main()
     vector<vector<pair<int, int>>> all_direction;
     output_handelling(map, all_direction, max_row_col);
 }
-void find_path(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, int &bset_land_size)
+void find_path(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, vector<vector<pair<int,int>>> &optimal_land , int optimal_land_index)
 {
-    if (targget_land_index.empty())
-        return;
+    if (targget_land_index.empty()) return;
     bool is_end = true;
-
-    if (find(block_index.begin(), block_index.end(), current_index) != block_index.end())
-        return;
+    if (find(block_index.begin(), block_index.end(), current_index) != block_index.end()) return ; 
+    auto is_index_in_target = find(targget_land_index.begin(),targget_land_index.end(),current_index) ; 
+    if(is_index_in_target!=targget_land_index.end()) targget_land_index.erase(is_index_in_target) ;  
+    if(map[current_index.first][current_index.second]==target && find(optimal_land[optimal_land_index].begin(),optimal_land[optimal_land_index].end(),current_index)==optimal_land[optimal_land_index].end())
+        optimal_land[optimal_land_index].push_back(current_index) ; 
     one_direction.push_back(current_index);
     block_index.push_back(current_index);
     move(map, targget_land_index, max_row_col,current_index, start_index, target, all_direction, one_direction, 
-        block_index, bset_land_size,is_end);
+        block_index, optimal_land,optimal_land_index,is_end);
     if (map[current_index.first][current_index.second] == target && is_end)
         all_direction.push_back(one_direction);
-    int land_size = find_land_size(map, one_direction, target, 0);
-    if (land_size > bset_land_size)
-        bset_land_size = land_size;
     one_direction.pop_back();
     block_index.pop_back();
     if (current_index == start_index)
-    {
-        targget_land_index.erase(targget_land_index.begin()) ; 
-        find_path(map, targget_land_index, max_row_col, targget_land_index[0], targget_land_index[0], target, all_direction, one_direction, block_index, bset_land_size) ; 
+    { 
+        if (!targget_land_index.empty())
+        {
+            optimal_land.push_back({}) ; 
+            find_path(map, targget_land_index, max_row_col, targget_land_index[0], targget_land_index[0], target, all_direction, one_direction, block_index, optimal_land , optimal_land_index+1) ; 
+        }
     }
 }
-void move(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, int &bset_land_size,bool &is_end)
+void move(const vector<string> &map, vector<pair<int, int>> &targget_land_index, pair<int, int> max_row_col, pair<int, int> current_index, pair<int, int> start_index, char target, vector<vector<pair<int, int>>> &all_direction, vector<pair<int, int>> &one_direction, vector<pair<int, int>> &block_index, vector<vector<pair<int,int>>> &optimal_land , int optimal_land_index,bool &is_end)
 {
     pair<int, int> possible_next_direction;
     vector<char> possible_path = find_possible_place(current_index, map, target);
     for(auto& direction:DIRECTIONS)
     {
-
         if (evaluate_index(possible_next_direction, block_index, current_index, direction, max_row_col) && is_avaleble_direction(map, possible_path, possible_next_direction))
         {
             is_end = false;
-            find_path(map, targget_land_index, max_row_col, possible_next_direction, start_index, target, all_direction, one_direction, block_index, bset_land_size);
-        }
-        
+            find_path(map, targget_land_index, max_row_col, possible_next_direction, start_index, target, all_direction, one_direction, block_index, optimal_land,optimal_land_index);
+        }  
     }
-    
-
 }
 bool evaluate_index(pair<int, int> &possible_next_direction, const vector<pair<int, int>> &block_index, pair<int, int> current_index, pair<int, int> add_direction, const pair<int, int> &max_row_col)
 {
     current_index.first += add_direction.first;
     current_index.second += add_direction.second;
     possible_next_direction = current_index;
-
     if (current_index.first < 0 || current_index.second < 0 ||
         current_index.first >= max_row_col.first || current_index.second >= max_row_col.second)
         return false;
-
     if (find(block_index.begin(), block_index.end(), current_index) != block_index.end())
         return false;
 
@@ -96,7 +92,12 @@ int find_land_size(const vector<string> &map, const vector<pair<int, int>> &one_
     else
         return find_land_size(map, one_direction, target, index + 1);
 }
-
+int find_best_land_size(const vector<vector<pair<int,int>>> &optimal_land , int answer , int index)
+{
+    if(index == optimal_land.size()) return answer ;  
+    if(optimal_land[index].size()>answer) answer = optimal_land[index].size() ; 
+    return find_best_land_size(optimal_land,answer,index+1) ; 
+}
 bool is_avaleble_direction(const vector<string> &map, vector<char> possible_path, pair<int, int> possible_next_direction)
 {
     if (possible_path.size() == 1)
@@ -179,12 +180,10 @@ void output_handelling(const vector<string> &map, vector<vector<pair<int, int>>>
     {
         vector<pair<int, int>> land;
         vector<pair<int, int>> one_direction, block_index;
-        int best_land_size = 0;
+        vector<vector<pair<int,int>>>  optimal_land={{}} ; 
         auto target_land_index = find_land_index(map, i, max_row_col, land);
         if (target_land_index.empty() != true)
-            find_path(map, target_land_index, max_row_col, target_land_index[0], target_land_index[0], i, all_direction, one_direction, block_index, best_land_size);
-        
-        cout << best_land_size << endl;
-
+            find_path(map, target_land_index, max_row_col, target_land_index[0], target_land_index[0], i, all_direction, one_direction, block_index, optimal_land);
+        cout << find_best_land_size(optimal_land,0,0) << endl;
     }
 }
