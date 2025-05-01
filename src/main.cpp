@@ -5,6 +5,35 @@
 #include <sstream>
 using namespace std;
 
+class EXAM
+{
+private : 
+    CSV * data_csv ; 
+    string subject ; 
+    string difficulty ; 
+    int count ; 
+    string template_name ; 
+public : 
+    void get_csv(CSV * csv)
+    {
+        this->data_csv = csv ; 
+    }
+    void create_template(string subject , string difficulty , int count,string template_name)
+    {
+        this->subject= subject ; 
+        this->difficulty = difficulty ; 
+        this->count = count ; 
+        this->template_name = template_name ; 
+    }
+
+};
+
+class IO
+{
+    void input_handelling()
+}
+
+
 class CSV
 {
 private:
@@ -22,6 +51,10 @@ public:
             auto row_data = parse_line(line);
             this->csv_rows.push_back(row_data);
         }
+    }
+    vector<map<pair<string, string>, vector<pair<string, string>>>> getCsv()
+    {
+        return this->csv_rows ; 
     }
     static map<pair<string, string>, vector<pair<string, string>>> parse_line(string line)
     {
@@ -57,6 +90,7 @@ public:
         };
         return parsed_line ; 
 }} ; 
+
 
 int main()
 {
