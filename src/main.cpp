@@ -21,13 +21,13 @@ const string OPT2 = "opt2" ;
 const string OPT3 = "opt3" ; 
 const string OPT4 = "opt4" ; 
 const string CORRECT_ANS = "correct ans" ; 
-
+class CSV ; 
 
 class EXAM
 {
 private : 
     CSV * data_csv ; 
-    static vector<map<string , vector<vector<string>>>> templates_exam ; 
+    inline static vector<map<string , vector<vector<string>>>> templates_exam={} ; 
 public : 
     EXAM(CSV * data_csv)
     {
@@ -54,28 +54,28 @@ public :
             current_line >> input ; 
             if(input==CREATE_TEMP)
             {
-                string template_name,data ;  
-                cin >> template_name ;
-                getline(cin , data) ; 
-                map<string , vector<vector<string>>> template_exam = {{template_name,parse_template_data(data)}} ; 
-                EXAM::add_template(template_exam) ; 
+                EXAM::add_template(parse_template_data(current_line)) ; 
             }
-
         }
     }
-    static vector<vector<string>> parse_template_data(const string &given_data)
+    static map<string , vector<vector<string>>> parse_template_data(istringstream & given_data)
     {
-        string single_data ; 
-        istringstream data(given_data) ;
+        string single_data ,template_name; 
+        char single_quote ; 
         vector<vector<string>> parsed_data ; 
-        while(getline(data,single_data))
+        given_data>>ws>>single_quote ; 
+        getline(given_data , template_name , '\'') ; 
+        given_data>>ws ; 
+        while(getline(given_data,single_data,' '))
         {
             istringstream exam_detail(single_data) ; 
             string subj , difficulty , count ;
-            exam_detail >>subj >> difficulty >> count ; 
+            getline(exam_detail,subj,':') ; 
+            getline(exam_detail,difficulty,':') ; 
+            getline(exam_detail,count,' ') ; 
             parsed_data.push_back({subj,difficulty,count}) ; 
         }
-        return parsed_data  ;
+        return {{template_name,parsed_data}}  ;
     }
 };
 
@@ -135,7 +135,9 @@ public:
 
 int main(int argc , char * argv[])
 {
-    CSV csv_question(argv[1]) ; 
+    CSV csv_question("questions.csv") ; 
     csv_question.parsing_csv();
+    IO::input_handelling() ; 
+
 }
 
