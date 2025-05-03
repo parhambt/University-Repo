@@ -21,6 +21,9 @@ const string OPT2 = "opt2" ;
 const string OPT3 = "opt3" ; 
 const string OPT4 = "opt4" ; 
 const string CORRECT_ANS = "correct ans" ; 
+const string NUM_INCORRECTS = "numOfIncorrects" ; 
+const string NUM_BLANKS = "numOfBlanks" ; 
+const string NUM_CORRECTS = "numOfCorrects" ; 
 class CSV ; 
 
 class EXAM
@@ -81,11 +84,10 @@ public :
 
 
 
-
 class CSV
 {
 private:
-    vector<map<pair<string, string>, vector<pair<string, string>>>> csv_rows;
+    vector<map<vector<string>, vector<map<string, string>>>> csv_questions;
     string path;
 
 public:
@@ -96,15 +98,15 @@ public:
         string line;
         while (getline(csv, line))
         {
-            auto row_data = parse_line(line);
-            this->csv_rows.push_back(row_data);
+            auto row_data = CSV::parse_line_csv(line);
+            this->csv_questions.push_back(row_data);
         }
     }
-    vector<map<pair<string, string>, vector<pair<string, string>>>> getCsv()
+    vector<map<vector<string>, vector<map<string, string>>>> getCsv()
     {
-        return this->csv_rows ; 
+        return this->csv_questions ; 
     }
-    static map<pair<string, string>, vector<pair<string, string>>> parse_line(string line)
+    static map<vector<string>, vector<map<string, string>>> parse_line_csv(string line)
     {
         istringstream current_line(line);
         string question_text , option1,option2,option3,option4,correct_answer,difficulty,subject;
@@ -116,21 +118,64 @@ public:
         getline(current_line, correct_answer, ',');
         getline(current_line, difficulty, ',');
         getline(current_line, subject);
-        map<pair<string, string>, vector<pair<string, string>>> parsed_line = {
-            {
-                make_pair(subject, difficulty),
-                {
-                    make_pair(QUESTION, question_text),
-                    make_pair(OPT1, option1),
-                    make_pair(OPT2, option2),
-                    make_pair(OPT3, option3),
-                    make_pair(OPT4, option4),
-                    make_pair(CORRECT_ANS , correct_answer) , 
-                }
-            }
+        vector<string> question_info = {question_text, difficulty, subject};
+
+        vector<map<string, string>> answer_info = {
+            { {"OPT1", option1} },
+            { {"OPT2",option2} },
+            { {"OPT3", option3} },
+            { {"OPT4", option4} },
+            { {"CORRECT_ANS", correct_answer} },
+            { {"NUM_BLANKS", "0"} },
+            { {"NUM_CORRECTS", "0"} },
+            { {"NUM_INCORRECTS", "0"} }
+        };
+    
+        map<vector<string>, vector<map<string, string>>> parsed_line = {
+            { question_info, answer_info }
         };
         return parsed_line ; 
 }} ; 
+
+
+class QUESTIONS
+{
+private : 
+    int num_blanks , num_corrects , num_incorrect  ;
+
+public : 
+    string question_text,difficulty,subject,option1,option2,option3,option4,correct_answer; 
+     
+    QUESTIONS(string question_text , string difficulty , string subject , string option1 , string option2 , string optio3 , string option4,string correct_answer)
+    {
+        this->question_text = question_text ; 
+        this->difficulty = difficulty ; 
+        this->subject =subject ; 
+        this->option1 = option1 ; 
+        this->option2 = option2 ;
+        this->option3 = option3 ;
+        this->option4 = option4 ;
+        this->correct_answer = correct_answer ; 
+        this->num_blanks = 0 ; 
+        this->num_corrects = 0 ; 
+        this->num_incorrect = 0  ; 
+
+    }
+    void set_num_blanks(int blanks)
+    {
+        this->num_blanks = blanks ; 
+    }
+    void set_num_incorrects(int incorrects)
+    {
+        this->num_incorrect = incorrects ; 
+    }
+    void set_num_corrects(int corrects)
+    {
+        this->correct_answer = corrects ; 
+    }
+    
+   
+};
 
 
 int main(int argc , char * argv[])
