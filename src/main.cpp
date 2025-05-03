@@ -25,21 +25,37 @@ const string CORRECT_ANS = "correct ans" ;
 const string NUM_INCORRECTS = "numOfIncorrects" ; 
 const string NUM_BLANKS = "numOfBlanks" ; 
 const string NUM_CORRECTS = "numOfCorrects" ; 
+const vector<vector<string>> NONE_VECTOR = {{"NONE","NONE"}} ; 
+
 class CSV ; 
+class IO ; 
+class Questions ; 
+class Exam ; 
+
 
 class Exam
 {
 private : 
-    CSV * data_csv ; 
-    inline static vector<map<string , vector<vector<string>>>> templates_exam={} ; 
+    vector<Questions*> exam_questions ; 
+    string exam_name ; 
+    inline static map<string , vector<vector<string>>> templates_exam={} ; 
+    inline static map<string , Exam *> all_exams={} ; 
 public : 
-    Exam(CSV * data_csv)
+    Exam(vector<Questions*> exam_questions,string exam_name)
     {
-        this->data_csv = data_csv ; 
+        this->exam_questions = exam_questions ; 
+        this->exam_name = exam_name ; 
+        all_exams.insert({exam_name,this}) ; 
     }
     static void add_template(const map<string , vector<vector<string>>> & template_exam)
     {
-        Exam::templates_exam.push_back(template_exam) ; 
+        Exam::templates_exam.insert(template_exam.begin(),template_exam.end()) ; 
+    }
+    static  vector<vector<string>> get_template_exam(string template_name)
+    {
+        if(Exam::templates_exam.find(template_name)!=Exam::templates_exam.end())
+            return Exam::templates_exam[template_name] ; 
+        else return NONE_VECTOR ; 
     }
 
 };
@@ -59,23 +75,35 @@ public :
             current_line >> input ; 
             if(input==CREATE_TEMP)
             {
-                Exam::add_template(parse_template_data(current_line)) ; 
+                string template_name = IO::parse_word_in_quote(current_line) ; 
+                if(Exam::get_template_exam(template_name)!=NONE_VECTOR)
+                    Exam::add_template({{template_name,parse_template_data(current_line)}}) ; 
+                else 
+                {
+                    cout<<"Duplicate name: \'"<<template_name<<"\'" <<endl; 
+                }
             }
             else if (input==GENERATE_TEST)
             {
-                string test_name , template_name ; 
-                test_name=IO::parse_word_in_quote(current_line) ; 
+                string exam_name , template_name ; 
+                exam_name=IO::parse_word_in_quote(current_line) ; 
                 template_name=IO::parse_word_in_quote(current_line) ;
-                
+                auto template_exam=Exam::get_template_exam(template_name) ; 
+                if(template_exam==NONE_VECTOR) cout<<"Could not find template: \'"<<template_name<<"\'"<<endl ; 
+                else
+                {
+                    vector<Questions * > exam_questions = Questions::choose_question_by_priority(template_exam) ; 
+                    Exam exam(exam_questions , exam_name) ; 
+                }
+
             }
             
         }
     }
-    static map<string , vector<vector<string>>> parse_template_data(istringstream & given_line)
+    static  vector<vector<string>> parse_template_data(istringstream & given_line)
     {
-        string single_data ,template_name; 
+        string single_data; 
         vector<vector<string>> parsed_data ; 
-        template_name=IO::parse_word_in_quote(given_line) ; 
         while(getline(given_line,single_data,' '))
         {
             istringstream exam_detail(single_data) ; 
@@ -85,7 +113,7 @@ public :
             getline(exam_detail,count,' ') ;  
             parsed_data.push_back({subj,difficulty,count}) ; 
         }
-        return {{template_name,parsed_data}}  ;
+        return parsed_data ;
     }
     static string parse_word_in_quote(istringstream & given_line)
     {
@@ -149,24 +177,31 @@ public :
         int priority = 3*(this->num_incorrect)   + this->num_blanks - 2*(this->num_corrects)  ;
         this->priority = priority ; 
     }
-    static vector<Questions * > choose_question_by_priority(string subject , string difficulty,int count)
+    static vector<Questions * > choose_question_by_priority(const vector<vector<string>>& template_exam)
     {
-        vector<Questions * > & all_questions = Questions::get_all_questions()[make_pair(subject , difficulty)] ; 
-        auto sort_priority = [](Questions * a , Questions * b)
+        vector<Questions * > choosen_questions ; 
+        for(auto single_info_temp : template_exam)
         {
-            if((a->priority!=b->priority ))
+            string subject=single_info_temp[0] , difficulty=single_info_temp[1] ; 
+            int count = stoi(single_info_temp[2]) ; 
+            vector<Questions * > & all_questions = Questions::get_all_questions()[make_pair(subject , difficulty)] ; 
+            auto sort_priority = [](Questions * a , Questions * b)
             {
-                if(a->priority > b->priority) return true ;
-                else return false ; 
-            }
-            else
-            {
-                if(a->question_text < b->question_text) return true ; 
-                else return false ; 
-            }
-        } ; 
-        sort(all_questions.begin(),all_questions.end(),sort_priority) ; 
-        vector<Questions * > choosen_questions (all_questions.begin(),all_questions.begin()+count) ; 
+                if((a->priority!=b->priority ))
+                {
+                    if(a->priority > b->priority) return true ;
+                    else return false ; 
+                }
+                else
+                {
+                    if(a->question_text < b->question_text) return true ; 
+                    else return false ; 
+                }
+            } ; 
+            sort(all_questions.begin(),all_questions.end(),sort_priority) ; 
+            vector<Questions * > choosen_question (all_questions.begin(),all_questions.begin()+count) ;
+            choosen_questions.insert(choosen_questions.end(),choosen_question.begin(),choosen_question.end()) ; 
+        } 
         return choosen_questions ; 
     }
 
