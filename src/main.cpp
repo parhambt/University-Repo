@@ -26,20 +26,21 @@ const string NUM_BLANKS = "numOfBlanks" ;
 const string NUM_CORRECTS = "numOfCorrects" ; 
 class CSV ; 
 
-class EXAM
+class Exam
 {
 private : 
     CSV * data_csv ; 
     inline static vector<map<string , vector<vector<string>>>> templates_exam={} ; 
 public : 
-    EXAM(CSV * data_csv)
+    Exam(CSV * data_csv)
     {
         this->data_csv = data_csv ; 
     }
     static void add_template(const map<string , vector<vector<string>>> & template_exam)
     {
-        EXAM::templates_exam.push_back(template_exam) ; 
+        Exam::templates_exam.push_back(template_exam) ; 
     }
+
 };
 
 
@@ -57,7 +58,7 @@ public :
             current_line >> input ; 
             if(input==CREATE_TEMP)
             {
-                EXAM::add_template(parse_template_data(current_line)) ; 
+                Exam::add_template(parse_template_data(current_line)) ; 
             }
         }
     }
@@ -84,29 +85,22 @@ public :
 
 
 
-class CSV
+class Csv
 {
 private:
-    vector<map<vector<string>, vector<map<string, string>>>> csv_questions;
     string path;
-
 public:
-    CSV(string path) { this->path = path; }
+    Csv(string path) { this->path = path; }
     void parsing_csv()
     {
         ifstream csv(this->path);
         string line;
         while (getline(csv, line))
         {
-            auto row_data = CSV::parse_line_csv(line);
-            this->csv_questions.push_back(row_data);
+            Csv::parse_line_csv(line) ; 
         }
     }
-    vector<map<vector<string>, vector<map<string, string>>>> getCsv()
-    {
-        return this->csv_questions ; 
-    }
-    static map<vector<string>, vector<map<string, string>>> parse_line_csv(string line)
+    static void parse_line_csv(string line)
     {
         istringstream current_line(line);
         string question_text , option1,option2,option3,option4,correct_answer,difficulty,subject;
@@ -118,35 +112,21 @@ public:
         getline(current_line, correct_answer, ',');
         getline(current_line, difficulty, ',');
         getline(current_line, subject);
-        vector<string> question_info = {question_text, difficulty, subject};
-
-        vector<map<string, string>> answer_info = {
-            { {"OPT1", option1} },
-            { {"OPT2",option2} },
-            { {"OPT3", option3} },
-            { {"OPT4", option4} },
-            { {"CORRECT_ANS", correct_answer} },
-            { {"NUM_BLANKS", "0"} },
-            { {"NUM_CORRECTS", "0"} },
-            { {"NUM_INCORRECTS", "0"} }
-        };
-    
-        map<vector<string>, vector<map<string, string>>> parsed_line = {
-            { question_info, answer_info }
-        };
-        return parsed_line ; 
-}} ; 
+        Questions q(question_text , difficulty , subject , option1 , option2 , option3 , option4 , correct_answer)  ;         
+    }
+} ; 
 
 
-class QUESTIONS
+class Questions
 {
 private : 
-    int num_blanks , num_corrects , num_incorrect  ;
-
+    int num_blanks , num_corrects , num_incorrect , priority  ;
+    string question_text,difficulty,subject,option1,option2,option3,option4,correct_answer;
+    static vector<Questions *> all_questions ; 
 public : 
-    string question_text,difficulty,subject,option1,option2,option3,option4,correct_answer; 
      
-    QUESTIONS(string question_text , string difficulty , string subject , string option1 , string option2 , string optio3 , string option4,string correct_answer)
+     
+    Questions(string question_text , string difficulty , string subject , string option1 , string option2 , string optio3 , string option4,string correct_answer)
     {
         this->question_text = question_text ; 
         this->difficulty = difficulty ; 
@@ -159,6 +139,8 @@ public :
         this->num_blanks = 0 ; 
         this->num_corrects = 0 ; 
         this->num_incorrect = 0  ; 
+        this->priority = 0 ; 
+        all_questions.push_back(this) ;
 
     }
     void set_num_blanks(int blanks)
@@ -173,14 +155,18 @@ public :
     {
         this->correct_answer = corrects ; 
     }
-    
+    static vector<Questions * > select_question_by_priority()
+    {
+
+    }
+
    
 };
 
 
 int main(int argc , char * argv[])
 {
-    CSV csv_question("questions.csv") ; 
+    Csv csv_question("questions.csv") ; 
     csv_question.parsing_csv();
     IO::input_handelling() ; 
 
