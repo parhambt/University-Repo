@@ -104,6 +104,10 @@ public :
     {
         return Questions::all_questions ; 
     }
+    vector<int> get_statistic_question()
+    {
+        return {this->num_corrects , this->num_incorrect , this->num_blanks} ; 
+    }
     int get_choosen_option()
     {
         return this->choosen_option ; 
@@ -174,7 +178,7 @@ public :
         } 
         return choosen_questions ; 
     }
-    static map<string , vector<Questions *>> categoricalize_question_and_sort(vector<Questions*>&exam_questions)
+    static map<string , vector<Questions *>> categoricalize_question_and_sort(const vector<Questions*>&exam_questions)
     {
 
         map<string , vector<Questions *>> categoricaled_question ; 
@@ -188,7 +192,7 @@ public :
         {
             sort(value.begin(),value.end(),[](Questions * a , Questions * b )
             {
-            if(a->question_text <b->question_text) return true ; 
+            if(a->question_text < b->question_text) return true ; 
             else return false ; 
             });
         }
@@ -229,6 +233,31 @@ public:
         new Questions (question_text , difficulty , subject , option1 , option2 , option3 , option4 , correct_answer)  ;         
     }
 } ; 
+class Report
+{
+private : 
+
+public : 
+    static void report_all(const vector<Questions *> &all_questions) 
+    {
+        map<string , vector<Questions *>> maped_all_questions=Questions::categoricalize_question_and_sort(all_questions) ;
+
+
+    }
+    static vector<int> calculate_score(const vector<Questions*> questions)
+    {
+        int total_correct =0, total_incorrect=0 , total_blank=0 ; 
+        float score ; 
+        for(auto& question:questions)
+        {
+            total_correct+= question->get_statistic_question()[0] ; 
+            total_incorrect += question->get_statistic_question()[1] ; 
+            total_blank += question->get_statistic_question()[2] ; 
+        }
+        score = total_correct / (total_correct+total_incorrect + total_blank) ; 
+        
+    }
+};
 
 class IO
 {
@@ -281,6 +310,12 @@ public :
                     auto categoricaled_question = Questions::categoricalize_question_and_sort(exam_questions) ; 
                     IO::print_exam(categoricaled_question , test_name) ;
                 }
+
+            }
+            else if(input==AUTO_GENERATE)
+            {
+                string test_name=parse_word_in_quote(current_line) ;
+
 
             }
             
