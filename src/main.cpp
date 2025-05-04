@@ -16,15 +16,16 @@ const string ALL = "all" ;
 const string TEST = "test" ; 
 const string TESTS = "tests" ; 
 const string SUBJECT = "subject" ; 
-const string QUESTION = "Question" ; 
-const string OPT1 = "opt1" ; 
-const string OPT2 = "opt2" ;
-const string OPT3 = "opt3" ; 
-const string OPT4 = "opt4" ; 
+const string QUESTION_TEXT = "question_text" ; 
+const string OPTION1 = "option1" ; 
+const string OPTION2 = "option2" ;
+const string OPTION3 = "option3" ; 
+const string OPTION4 = "option4" ; 
 const string CORRECT_ANS = "correct ans" ; 
 const string NUM_INCORRECTS = "numOfIncorrects" ; 
 const string NUM_BLANKS = "numOfBlanks" ; 
 const string NUM_CORRECTS = "numOfCorrects" ; 
+const string  TAB = "    " ; 
 const vector<vector<string>> NONE_VECTOR = {{"NONE","NONE"}} ; 
 
 class CSV ; 
@@ -57,6 +58,18 @@ public :
             return Exam::templates_exam[template_name] ; 
         else return NONE_VECTOR ; 
     }
+    static Exam * get_exam(string exam_name)
+    {
+        auto exam = Exam::all_exams.find(exam_name) ; 
+        if(exam==Exam::all_exams.end()) return nullptr ; 
+        return  exam->second ; 
+    }
+    vector<Questions*> get_exams_questions()
+    {
+        return this->exam_questions ; 
+    }
+
+
 
 };
 
@@ -97,9 +110,52 @@ public :
                 }
 
             }
+            else if (input==ATTEND)
+            {
+                string test_name = parse_word_in_quote(current_line) ; 
+                Exam * exam= Exam::get_exam(test_name) ; 
+                if (exam==nullptr) cout<<"Could not find test: \'"<<test_name<<"\'\n";
+                else
+                {
+                    vector<Questions*> exam_questions=exam->get_exams_questions();
+                    auto categoricaled_question = Questions::categoricalize_question_and_sort(exam_questions) ; 
+                    
+                }
+
+            }
             
         }
     }
+    static void print_exam(const map<string , vector<Questions *>>& categoricaled_question,string test_name)
+    {
+        cout<<test_name <<":\n" ;
+        int count = 1  ; 
+        for(auto [subject,questions] : categoricaled_question)
+        {
+            auto it  = questions.begin() ; 
+            
+            while( it!=questions.end() )
+            {
+                
+                cout<<count<<") "<<(*it)->get_question_detail(QUESTION_TEXT)<<endl ; 
+                cout<<TAB<<"1. "<<(*it)->get_question_detail(OPTION1)<<endl ; 
+                cout<<TAB<<"2. "<<(*it)->get_question_detail(OPTION2)<<endl ;
+                cout<<TAB<<"3. "<<(*it)->get_question_detail(OPTION3)<<endl ;
+                cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<endl ;
+                cout<<"Your answer: " ; 
+                string answer ; 
+                cin>>answer ; 
+
+                count++ ; 
+            }
+            
+        } 
+    }
+    static bool evaluate_input_and_act(string input)
+    {
+        
+    }
+
     static  vector<vector<string>> parse_template_data(istringstream & given_line)
     {
         string single_data; 
@@ -156,6 +212,14 @@ public :
     {
         return Questions::all_questions ; 
     }
+    string get_question_detail(string specific_part_question)
+    {
+        if(specific_part_question=="question_text") return this->question_text ; 
+        else if (specific_part_question=="option1") return this->option1 ; 
+        else if ( specific_part_question=="option2") return this->option2 ; 
+        else if (specific_part_question=="option3") return this->option3 ; 
+        else if (specific_part_question=="option4") return this->option4 ;
+    }
     void set_num_blanks(int blanks)
     {
         this->num_blanks = blanks ; 
@@ -203,6 +267,26 @@ public :
             choosen_questions.insert(choosen_questions.end(),choosen_question.begin(),choosen_question.end()) ; 
         } 
         return choosen_questions ; 
+    }
+    static map<string , vector<Questions *>> categoricalize_question_and_sort(vector<Questions*>&exam_questions)
+    {
+
+        map<string , vector<Questions *>> categoricaled_question ; 
+        for(auto question:exam_questions)
+        {
+            string subject = question->subject ; 
+            categoricaled_question[subject].push_back(question) ; 
+        }
+
+        for(auto& [key,value]:categoricaled_question)
+        {
+            sort(value.begin(),value.end(),[](Questions * a , Questions * b )
+            {
+            if(a->question_text >b->question_text) return true ; 
+            else return false ; 
+            });
+        }
+        return categoricaled_question ; 
     }
 
    
