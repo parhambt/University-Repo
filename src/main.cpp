@@ -26,10 +26,11 @@ const string NUM_INCORRECTS = "numOfIncorrects" ;
 const string NUM_BLANKS = "numOfBlanks" ; 
 const string NUM_CORRECTS = "numOfCorrects" ; 
 const string  TAB = "    " ; 
+const string FLASH = " <-" ; 
 const vector<vector<string>> NONE_VECTOR = {{"NONE","NONE"}} ; 
 
 
-
+class Questions;
 
 class Exam
 {
@@ -47,7 +48,7 @@ public :
     }
     static void add_template(const map<string , vector<vector<string>>> & template_exam)
     {
-        Exam::templates_exam.insert(template_exam.begin(),template_exam.end()) ; 
+        Exam::templates_exam.insert(*template_exam.begin()) ; 
     }
     static  vector<vector<string>> get_template_exam(string template_name)
     {
@@ -71,128 +72,6 @@ public :
 };
 
 
-class IO
-{
-public : 
-     
-    static void input_handelling()
-    {
-        string line ; 
-        while(getline(cin,line))
-        {
-            istringstream current_line(line) ;
-            string input ;
-            current_line >> input ; 
-            if(input==CREATE_TEMP)
-            {
-                string template_name = IO::parse_word_in_quote(current_line) ; 
-                if(Exam::get_template_exam(template_name)!=NONE_VECTOR)
-                    Exam::add_template({{template_name,parse_template_data(current_line)}}) ; 
-                else 
-                {
-                    cout<<"Duplicate name: \'"<<template_name<<"\'" <<endl; 
-                }
-            }
-            else if (input==GENERATE_TEST)
-            {
-                string exam_name , template_name ; 
-                exam_name=IO::parse_word_in_quote(current_line) ; 
-                template_name=IO::parse_word_in_quote(current_line) ;
-                auto template_exam=Exam::get_template_exam(template_name) ; 
-                if(template_exam==NONE_VECTOR) cout<<"Could not find template: \'"<<template_name<<"\'"<<endl ; 
-                else
-                {
-                    vector<Questions * > exam_questions = Questions::choose_question_by_priority(template_exam) ; 
-                    Exam exam(exam_questions , exam_name) ; 
-                }
-
-            }
-            else if (input==ATTEND)
-            {
-                string test_name = parse_word_in_quote(current_line) ; 
-                Exam * exam= Exam::get_exam(test_name) ; 
-                if (exam==nullptr) cout<<"Could not find test: \'"<<test_name<<"\'\n";
-                else
-                {
-                    vector<Questions*> exam_questions=exam->get_exams_questions();
-                    auto categoricaled_question = Questions::categoricalize_question_and_sort(exam_questions) ; 
-                    
-                }
-
-            }
-            
-        }
-    }
-    static void print_exam(const map<string , vector<Questions *>>& categoricaled_question,string test_name)
-    {
-        cout<<test_name <<":\n" ;
-        int count = 1  ; 
-        for(auto [subject,questions] : categoricaled_question)
-        {
-            auto it  = questions.begin() ; 
-            while( it!=questions.end() )
-            {
-                cout<<count<<") "<<(*it)->get_question_detail(QUESTION_TEXT)<<endl ; 
-                cout<<TAB<<"1. "<<(*it)->get_question_detail(OPTION1)<<endl ; 
-                cout<<TAB<<"2. "<<(*it)->get_question_detail(OPTION2)<<endl ;
-                cout<<TAB<<"3. "<<(*it)->get_question_detail(OPTION3)<<endl ;
-                cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<endl ;
-                cout<<"Your answer: " ; 
-                bool state=IO::enter_option(it) ;
-                if(state==false) 
-                {
-                    if(questions.begin()==it) cout<<"Invalid answer, please try again.\n" ;
-                    else {--it ; --count ;} 
-                }
-                else 
-                {
-                    ++it ; ++count ;
-                }  
-                
-            }
-            
-        } 
-    }
-    static bool enter_option( vector<Questions*>::iterator it)
-    {
-        bool is_valid_option = false ; 
-        
-        while(is_valid_option!=true)
-        {
-            string answer ; 
-            if(answer =="previous") return false ; 
-            getline(cin,answer) ; 
-            is_valid_option =(*it)->choose_answer(answer) ; 
-            if(is_valid_option==false) cout<<"Invalid answer, please try again.\n" ; 
-        }
-        return true ; 
-    }
-
-    static  vector<vector<string>> parse_template_data(istringstream & given_line)
-    {
-        string single_data; 
-        vector<vector<string>> parsed_data ; 
-        while(getline(given_line,single_data,' '))
-        {
-            istringstream exam_detail(single_data) ; 
-            string subj , difficulty , count ;
-            getline(exam_detail,subj,':') ; 
-            getline(exam_detail,difficulty,':') ; 
-            getline(exam_detail,count,' ') ;  
-            parsed_data.push_back({subj,difficulty,count}) ; 
-        }
-        return parsed_data ;
-    }
-    static string parse_word_in_quote(istringstream & given_line)
-    {
-        string target_word  ; 
-        char single_quote ;
-        given_line>>ws>>single_quote ; 
-        getline(given_line , target_word , '\'') ;
-        given_line>>ws ; 
-        return target_word ; 
-    }
-};
 
 class Questions
 {
@@ -225,6 +104,10 @@ public :
     {
         return Questions::all_questions ; 
     }
+    int get_choosen_option()
+    {
+        return this->choosen_option ; 
+    }
     string get_question_detail(string specific_part_question)
     {
         if(specific_part_question=="question_text") return this->question_text ; 
@@ -232,6 +115,7 @@ public :
         else if ( specific_part_question=="option2") return this->option2 ; 
         else if (specific_part_question=="option3") return this->option3 ; 
         else if (specific_part_question=="option4") return this->option4 ;
+        else return "NONE" ; 
     }
     bool evaluate_answer(string choosen_answer)
     {
@@ -280,7 +164,7 @@ public :
                 }
                 else
                 {
-                    if(a->question_text < b->question_text) return true ; 
+                    if(a->question_text > b->question_text) return true ; 
                     else return false ; 
                 }
             } ; 
@@ -342,10 +226,150 @@ public:
         getline(current_line, correct_answer, ',');
         getline(current_line, difficulty, ',');
         getline(current_line, subject);
-        Questions q(question_text , difficulty , subject , option1 , option2 , option3 , option4 , correct_answer)  ;         
+        new Questions (question_text , difficulty , subject , option1 , option2 , option3 , option4 , correct_answer)  ;         
     }
 } ; 
 
+class IO
+{
+public : 
+     
+    static void input_handelling()
+    {
+        string line ; 
+        while(getline(cin,line))
+        {
+            istringstream current_line(line) ;
+            string input ;
+            current_line >> input ; 
+            if(input==CREATE_TEMP)
+            {
+                string template_name = IO::parse_word_in_quote(current_line) ; 
+                if(Exam::get_template_exam(template_name)==NONE_VECTOR)
+                {
+                    Exam::add_template({{template_name,parse_template_data(current_line)}}) ; 
+                    cout<<"Template \'"<<template_name<<"\' was created successfully.\n" ; 
+                }
+                else 
+                {
+                    cout<<"Duplicate name: \'"<<template_name<<"\'" <<endl; 
+                }
+            }
+            else if (input==GENERATE_TEST)
+            {
+                string exam_name , template_name ; 
+                exam_name=IO::parse_word_in_quote(current_line) ; 
+                template_name=IO::parse_word_in_quote(current_line) ;
+                auto template_exam=Exam::get_template_exam(template_name) ; 
+                if(template_exam==NONE_VECTOR) cout<<"Could not find template: \'"<<template_name<<"\'"<<endl ; 
+                else
+                {
+                    vector<Questions * > exam_questions = Questions::choose_question_by_priority(template_exam) ; 
+                    new Exam (exam_questions , exam_name) ; 
+                    cout<<"Test \'"<<exam_name<<"\' was generated successfully.\n" ;
+                }
+
+            }
+            else if (input==ATTEND)
+            {
+                string test_name = parse_word_in_quote(current_line) ; 
+                Exam * exam= Exam::get_exam(test_name) ; 
+                if (exam==nullptr) cout<<"Could not find test: \'"<<test_name<<"\'\n";
+                else
+                {
+                    vector<Questions*> exam_questions=exam->get_exams_questions();
+                    auto categoricaled_question = Questions::categoricalize_question_and_sort(exam_questions) ; 
+                    IO::print_exam(categoricaled_question , test_name) ;
+                }
+
+            }
+            
+        }
+    }
+    static void print_exam(const map<string , vector<Questions *>>& categoricaled_question,string test_name)
+    {
+        cout<<test_name <<":\n" ;
+        int count = 1  ; 
+        for(auto [subject,questions] : categoricaled_question)
+        {
+            auto it  = questions.begin() ; 
+            bool is_valid_option = false ; 
+            while( it!=questions.end() )
+            {
+                int choosen_answer = (*it)->get_choosen_option() ; 
+                if(is_valid_option==false)
+                {
+                    option_printer(choosen_answer,it,count) ; 
+                }
+                bool state=IO::enter_option(it,is_valid_option,questions) ;
+                if(state==false) 
+                {
+                   --it ; --count ;
+                }
+                else 
+                {
+                    ++it ; ++count ;
+                }  
+                
+            }
+            
+        } 
+    }
+    static void option_printer(int choosen_answer,vector<Questions*>::iterator it,int count)
+    {
+        if(choosen_answer==-1) cout<<count<<") "<<(*it)->get_question_detail(QUESTION_TEXT)<<endl ; 
+        else cout<<count<<") "<<(*it)->get_question_detail(QUESTION_TEXT)<<FLASH<<endl ; 
+        if(choosen_answer==-1)cout<<TAB<<"1. "<<(*it)->get_question_detail(OPTION1)<<endl ; 
+        else cout<<TAB<<"1. "<<(*it)->get_question_detail(OPTION1)<<FLASH<<endl ; 
+        if(choosen_answer==-1)cout<<TAB<<"2. "<<(*it)->get_question_detail(OPTION2)<<endl ;
+        else cout<<TAB<<"2. "<<(*it)->get_question_detail(OPTION2)<<FLASH<<endl ;
+        if(choosen_answer==-1)cout<<TAB<<"3. "<<(*it)->get_question_detail(OPTION3)<<endl ;
+        else cout<<TAB<<"3. "<<(*it)->get_question_detail(OPTION3)<<FLASH<<endl ;
+        if(choosen_answer==-1)cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<endl ;
+        else cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<FLASH<<endl ;
+    }
+    static bool enter_option( vector<Questions*>::iterator it, bool &is_valid_option,vector<Questions*> &questions)
+    {
+         
+        
+        while(is_valid_option!=true)
+        {
+            string answer ; 
+            cout<<"Your answer: " ; 
+            getline(cin,answer) ;
+            is_valid_option =(*it)->choose_answer(answer) ; 
+            if(answer =="previous"&&questions.begin()!=it) return false ; 
+            else if(answer == "previous" && questions.begin() == it) is_valid_option = false ; 
+            if(is_valid_option==false) cout<<"Invalid answer, please try again.\n" ; 
+        }
+        return true ; 
+    }
+
+    static  vector<vector<string>> parse_template_data(istringstream & given_line)
+    {
+        string single_data; 
+        vector<vector<string>> parsed_data ; 
+        while(getline(given_line,single_data,' '))
+        {
+            istringstream exam_detail(single_data) ; 
+            string subj , difficulty , count ;
+            getline(exam_detail,subj,':') ; 
+            getline(exam_detail,difficulty,':') ; 
+            getline(exam_detail,count,' ') ;  
+            parsed_data.push_back({subj,difficulty,count}) ; 
+        }
+        return parsed_data ;
+    }
+    static string parse_word_in_quote(istringstream & given_line)
+    {
+        string target_word  ; 
+        char single_quote ;
+        given_line>>ws>>single_quote ; 
+        getline(given_line , target_word , '\'') ;
+        given_line>>ws ; 
+        return target_word ; 
+    }
+};
 
 
 
