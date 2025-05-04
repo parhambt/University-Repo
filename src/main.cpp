@@ -164,7 +164,7 @@ public :
                 }
                 else
                 {
-                    if(a->question_text > b->question_text) return true ; 
+                    if(a->question_text < b->question_text) return true ; 
                     else return false ; 
                 }
             } ; 
@@ -188,7 +188,7 @@ public :
         {
             sort(value.begin(),value.end(),[](Questions * a , Questions * b )
             {
-            if(a->question_text >b->question_text) return true ; 
+            if(a->question_text <b->question_text) return true ; 
             else return false ; 
             });
         }
