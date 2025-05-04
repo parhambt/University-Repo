@@ -28,10 +28,7 @@ const string NUM_CORRECTS = "numOfCorrects" ;
 const string  TAB = "    " ; 
 const vector<vector<string>> NONE_VECTOR = {{"NONE","NONE"}} ; 
 
-class CSV ; 
-class IO ; 
-class Questions ; 
-class Exam ; 
+
 
 
 class Exam
@@ -133,27 +130,42 @@ public :
         for(auto [subject,questions] : categoricaled_question)
         {
             auto it  = questions.begin() ; 
-            
             while( it!=questions.end() )
             {
-                
                 cout<<count<<") "<<(*it)->get_question_detail(QUESTION_TEXT)<<endl ; 
                 cout<<TAB<<"1. "<<(*it)->get_question_detail(OPTION1)<<endl ; 
                 cout<<TAB<<"2. "<<(*it)->get_question_detail(OPTION2)<<endl ;
                 cout<<TAB<<"3. "<<(*it)->get_question_detail(OPTION3)<<endl ;
                 cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<endl ;
                 cout<<"Your answer: " ; 
-                string answer ; 
-                cin>>answer ; 
-
-                count++ ; 
+                bool state=IO::enter_option(it) ;
+                if(state==false) 
+                {
+                    if(questions.begin()==it) cout<<"Invalid answer, please try again.\n" ;
+                    else {--it ; --count ;} 
+                }
+                else 
+                {
+                    ++it ; ++count ;
+                }  
+                
             }
             
         } 
     }
-    static bool evaluate_input_and_act(string input)
+    static bool enter_option( vector<Questions*>::iterator it)
     {
+        bool is_valid_option = false ; 
         
+        while(is_valid_option!=true)
+        {
+            string answer ; 
+            if(answer =="previous") return false ; 
+            getline(cin,answer) ; 
+            is_valid_option =(*it)->choose_answer(answer) ; 
+            if(is_valid_option==false) cout<<"Invalid answer, please try again.\n" ; 
+        }
+        return true ; 
     }
 
     static  vector<vector<string>> parse_template_data(istringstream & given_line)
@@ -185,7 +197,7 @@ public :
 class Questions
 {
 private : 
-    int num_blanks , num_corrects , num_incorrect , priority  ;
+    int num_blanks , num_corrects , num_incorrect , priority,choosen_option  ;
     string question_text,difficulty,subject,option1,option2,option3,option4,correct_answer;
     inline static map<pair<string,string> , vector<Questions * >> all_questions={} ; 
 public : 
@@ -205,6 +217,7 @@ public :
         this->num_corrects = 0 ; 
         this->num_incorrect = 0  ; 
         this->priority = 0 ; 
+        this->choosen_option = -1 ; 
         Questions::all_questions[make_pair(subject,difficulty)].push_back(this) ; 
 
     }
@@ -220,21 +233,30 @@ public :
         else if (specific_part_question=="option3") return this->option3 ; 
         else if (specific_part_question=="option4") return this->option4 ;
     }
-    void set_num_blanks(int blanks)
+    bool evaluate_answer(string choosen_answer)
     {
-        this->num_blanks = blanks ; 
-        priority_calculator() ; 
-
+        if(this->correct_answer == choosen_answer) return true ; 
+        else return false ; 
     }
-    void set_num_incorrects(int incorrects)
+    bool choose_answer(string choosen_answer)
     {
-        this->num_incorrect = incorrects ; 
-        priority_calculator() ; 
-    }
-    void set_num_corrects(int corrects)
-    {
-        this->num_corrects = corrects ;
-        priority_calculator() ; 
+        if(choosen_answer=="1"||choosen_answer=="2"||choosen_answer=="3"||choosen_answer=="4")
+        {
+            if(evaluate_answer(choosen_answer)) this->num_corrects +=1 ; 
+            else this->num_incorrect+=1 ; 
+            this->choosen_option = stoi(choosen_answer) ; 
+            priority_calculator();
+            return true ;
+        }
+        else if(choosen_answer.empty()) 
+        {
+            this->num_blanks +=1 ; 
+            this->choosen_option = 0 ; 
+            priority_calculator(); 
+            return true ; 
+        }
+        return false ; 
+        
     }
     void priority_calculator()
     {
