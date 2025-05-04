@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include<algorithm>
+#include <iomanip>
+#include <string>
 using namespace std;
 
 
@@ -79,6 +81,7 @@ private :
     int num_blanks , num_corrects , num_incorrect , priority,choosen_option  ;
     string question_text,difficulty,subject,option1,option2,option3,option4,correct_answer;
     inline static map<pair<string,string> , vector<Questions * >> all_questions={} ; 
+    inline static vector<Questions * > all_questions_vector={} ; 
 public : 
      
      
@@ -98,11 +101,16 @@ public :
         this->priority = 0 ; 
         this->choosen_option = -1 ; 
         Questions::all_questions[make_pair(subject,difficulty)].push_back(this) ; 
+        Questions::all_questions_vector.push_back(this) ; 
 
     }
     static map<pair<string,string> , vector<Questions * >>& get_all_questions()
     {
         return Questions::all_questions ; 
+    }
+    static vector<Questions*> get_all_questions_vector()
+    {
+        return Questions::all_questions_vector ; 
     }
     vector<int> get_statistic_question()
     {
@@ -238,16 +246,21 @@ class Report
 private : 
 
 public : 
-    static void report_all(const vector<Questions *> &all_questions) 
+    static map<string,vector<int>> report_all(const vector<Questions *> &all_questions) 
     {
+        map<string,vector<int>> report ; 
         map<string , vector<Questions *>> maped_all_questions=Questions::categoricalize_question_and_sort(all_questions) ;
-
-
+        for(auto& [key,questions ]: maped_all_questions)
+        {
+            vector<int> statistic = calculate_statistics(questions) ; 
+            report.insert({key,statistic}) ;
+        }
+        return report ; 
     }
-    static vector<int> calculate_score(const vector<Questions*> questions)
+    static vector<int> calculate_statistics(const vector<Questions*> questions)
     {
         int total_correct =0, total_incorrect=0 , total_blank=0 ; 
-        float score ; 
+        double score ; 
         for(auto& question:questions)
         {
             total_correct+= question->get_statistic_question()[0] ; 
@@ -255,9 +268,15 @@ public :
             total_blank += question->get_statistic_question()[2] ; 
         }
         score = total_correct / (total_correct+total_incorrect + total_blank) ; 
-        
+        return {total_correct , total_incorrect , total_blank } ; 
+ 
+    }
+    static double calculate_score(const vector<int> &statistics)
+    {
+        return statistics[0]/(statistics[0]+statistics[1]+statistics[2]) ;
     }
 };
+
 
 class IO
 {
@@ -318,8 +337,34 @@ public :
 
 
             }
+            else if(input == REPORT)
+            {
+                string next_input  ; 
+                cin>>next_input ; 
+                if(next_input==ALL)
+                {
+                     
+
+                }
+            }
             
         }
+    }
+    static void print_report_all()
+    {
+        cout<<"Total report:\n" ;
+        auto statistics = Report::report_all(Questions::get_all_questions_vector()) ; 
+        for(auto [key,statistic]:statistics)
+        {
+            string score = three_figure(Report::calculate_score(statistic)) ; 
+            cout<<key<<": "<<statistic[0]<<" corrects, "<<statistic[1]<<" incorrects and "<<statistic[2]<<" blanks. Score: "<<score<<"%.\n" ; 
+        }
+
+    }
+    static string three_figure(double value) {
+        std::ostringstream out;
+        out << std::fixed << std::setprecision(3) << (value * 100) << "%";
+        return out.str();
     }
     static void print_exam(const map<string , vector<Questions *>>& categoricaled_question,string test_name)
     {
