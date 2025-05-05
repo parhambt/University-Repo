@@ -6,6 +6,7 @@
 #include<algorithm>
 #include <iomanip>
 #include <string>
+#include <set>
 using namespace std;
 
 
@@ -116,6 +117,52 @@ public :
         this->choosen_option = -1 ; 
         Questions::all_questions[make_pair(subject,difficulty)].push_back(this) ; 
         Questions::all_questions_vector.push_back(this) ; 
+
+    }
+    static vector<Questions *> get_questions_by_subject(string subject)
+    {
+        vector<Questions *> all_questions  ; 
+        for(auto difficulty:DIFFICULTY)
+        {
+            auto questions = Questions::all_questions[make_pair(subject , difficulty)] ; 
+            all_questions.insert(all_questions.end(),questions.begin() , questions.end()) ; 
+        }
+        return all_questions ; 
+    }
+    static vector<string> find_all_subject()
+    {
+        set<string> all_subject ; 
+        auto all_questions = Questions::all_questions ; 
+        for(auto& [key,value]:all_questions)
+        {
+            all_subject.insert(key.first) ; 
+        }
+        return vector(all_subject.begin(),all_subject.end()) ; 
+    }
+    static map<string , vector<Questions *>> choose_question_from_two_least_subject_avg()
+    {
+         
+
+
+    }
+    static map<string , double> subject_ratio_correct_answer()
+    {
+        map<string ,double> answer ; 
+        vector<string> all_subject = Questions::find_all_subject() ;
+        for(auto subject: all_subject)
+        {
+            int count_true = 0 ; 
+            auto all_question_subject = get_questions_by_subject(subject) ; 
+            for(auto& question:all_question_subject)
+            {
+                if(question->choosen_option == stoi(question->correct_answer)) count_true++ ; 
+
+            }
+            if(all_questions.size()==0) answer.insert({subject , 0}) ; 
+            else  answer.insert({subject , count_true / all_questions.size()}) ; 
+            
+        }
+        return answer ; 
 
     }
     static map<pair<string,string> , vector<Questions * >>& get_all_questions()
