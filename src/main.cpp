@@ -77,9 +77,9 @@ public :
     {
         return Exam::all_exams_attend ;
     }
-    static string get_exam_name(Exam * exam)
+    string get_exam_name()
     {
-        return exam->exam_name ; 
+        return this->exam_name ; 
     }
 
 
@@ -259,19 +259,19 @@ class Report
 private : 
 
 public : 
-    static map<string,vector<int>> report_statistics(const vector<Questions *> &all_questions) 
+    static map<string,vector<int>> report_statistics_categorical(const vector<Questions *> &all_questions) 
     {
         map<string,vector<int>> report ; 
         map<string , vector<Questions *>> maped_all_questions=Questions::categoricalize_question_and_sort(all_questions) ;
         for(auto& [key,questions ]: maped_all_questions)
         {
-            vector<int> statistic = calculate_statistics(questions) ; 
+            vector<int> statistic = report_statistics(questions) ; 
             report.insert({key,statistic}) ;
         }
-        report.insert({"total",calculate_statistics(all_questions)}) ; 
+        report.insert({"total",report_statistics(all_questions)}) ; 
         return report ; 
     }
-    static vector<int> calculate_statistics(const vector<Questions*> questions)
+    static vector<int> report_statistics(const vector<Questions*> questions)
     {
         int total_correct =0, total_incorrect=0 , total_blank=0 ; 
         for(auto& question:questions)
@@ -346,7 +346,7 @@ public :
             }
             else if(input==AUTO_GENERATE)
             {
-                string test_name=parse_word_in_quote(current_line) ;
+                string test_name=IO::parse_word_in_quote(current_line) ;
 
 
             }
@@ -356,16 +356,20 @@ public :
                 cin>>next_input ; 
                 if(next_input==ALL)
                 {
-                    print_report(0 , ALL) ;
+                    IO::print_report(0 , ALL) ;
                 }
                 else if (next_input==TEST)
                 {
-                    string test_name=parse_word_in_quote(current_line) ;
-                    print_report(1,test_name) ; 
+                    string test_name=IO::parse_word_in_quote(current_line) ;
+                    IO::print_report(1,test_name) ; 
                 }
                 else if (next_input==TESTS)
                 {
-
+                    IO::report_tests() ; 
+                }
+                else if(next_input==SUBJECT)
+                {
+                    
                 }
             }
             
@@ -376,12 +380,12 @@ public :
         if(stage==0) cout<<"Total report:\n" ;
         else cout<<"Results for "<<test_name<<":\n" ; 
         map<string,vector<int>> statistics ; 
-        if(stage ==0) statistics = Report::report_statistics(Questions::get_all_questions_vector()) ; 
+        if(stage ==0) statistics = Report::report_statistics_categorical(Questions::get_all_questions_vector()) ; 
         else 
         {
             auto exam =Exam::get_exam(test_name) ; 
             auto exam_questions = exam->get_exams_questions() ; 
-            statistics = Report::report_statistics(exam_questions);
+            statistics = Report::report_statistics_categorical(exam_questions);
         }
         for(auto [key,statistic]:statistics)
         {
@@ -400,7 +404,11 @@ public :
         auto exams = Exam::get_exams_attends() ; 
         for(auto& exam : exams)
         {
-            exam->
+            string exam_name =exam->get_exam_name() ; 
+            auto exam_questions = exam->get_exams_questions() ; 
+            auto statistics = Report::report_statistics(exam_questions) ; 
+            string score = three_figure(Report::calculate_score(statistics)) ; 
+            cout<<exam_name<<": "<<statistics[0]<<" corrects, "<<statistics[1]<<" incorrects and "<<statistics[2]<<"blanks. Score: "<<score<<"%.\n" ; 
         }
     }
     
