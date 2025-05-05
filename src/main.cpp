@@ -28,7 +28,11 @@ const string CORRECT_ANS = "correct ans" ;
 const string NUM_INCORRECTS = "numOfIncorrects" ; 
 const string NUM_BLANKS = "numOfBlanks" ; 
 const string NUM_CORRECTS = "numOfCorrects" ; 
-const vector<string> DIFFICULTY =  {"easy" , "medium" ,"hard"} ; 
+const string EASY = "easy" ; 
+const string MEDIUM = "medium" ;
+const string HARD = "hard" ; 
+const vector<string> DIFFICULTY =  {EASY, MEDIUM ,HARD} ; 
+
 const string  TAB = "    " ; 
 const string FLASH = " <-" ; 
 const vector<vector<string>> NONE_VECTOR = {{"NONE","NONE"}} ; 
@@ -139,15 +143,24 @@ public :
         }
         return vector(all_subject.begin(),all_subject.end()) ; 
     }
-    static map<string , vector<Questions *>> choose_question_from_two_least_subject_avg()
+    static vector<Questions*> choose_question_from_two_least_subject_avg()
     {
-         
-
-
+        auto subject_ratio_correctness = Questions :: subject_ratio_correct_answer() ; 
+        auto sort_ratio = [](pair<string , double> &a , pair<string,double>&b)
+        {
+            if(a.second <=  b.second) return true ; 
+            else return false ; 
+        } ; 
+        sort(subject_ratio_correctness.begin(),subject_ratio_correctness.end() , sort_ratio) ; 
+        string subject1 = subject_ratio_correctness[0].first , subject2 = subject_ratio_correctness[1].first ;
+        vector<vector<string>> template_exam={{subject1,EASY,"3"},{subject1,MEDIUM,"2"},{subject1,HARD,"1"},{subject2,EASY,"2"},{subject2,MEDIUM,"1"},{subject2,HARD ,"1"}} ;
+        auto choosen_questions = Questions:: choose_question_by_priority(template_exam) ; 
+        
+        return choosen_questions ; 
     }
-    static map<string , double> subject_ratio_correct_answer()
+    static vector<pair<string , double>> subject_ratio_correct_answer()
     {
-        map<string ,double> answer ; 
+        vector<pair<string , double>> answer ; 
         vector<string> all_subject = Questions::find_all_subject() ;
         for(auto subject: all_subject)
         {
@@ -158,8 +171,8 @@ public :
                 if(question->choosen_option == stoi(question->correct_answer)) count_true++ ; 
 
             }
-            if(all_questions.size()==0) answer.insert({subject , 0}) ; 
-            else  answer.insert({subject , count_true / all_questions.size()}) ; 
+            if(all_questions.size()==0) answer.push_back(make_pair(subject , 0)) ; 
+            else  answer.push_back({subject , count_true / all_questions.size()}) ; 
             
         }
         return answer ; 
@@ -220,6 +233,19 @@ public :
         int priority = 3*(this->num_incorrect)   + this->num_blanks - 2*(this->num_corrects)  ;
         this->priority = priority ; 
     }
+    static bool sort_priority(Questions * a , Questions * b)
+    {
+        if((a->priority!=b->priority ))
+        {
+            if(a->priority > b->priority) return true ;
+            else return false ; 
+        }
+        else
+        {
+            if(a->question_text < b->question_text) return true ; 
+            else return false ; 
+        } 
+    }
     static vector<Questions * > choose_question_by_priority(const vector<vector<string>>& template_exam)
     {
         vector<Questions * > choosen_questions ; 
@@ -228,20 +254,8 @@ public :
             string subject=single_info_temp[0] , difficulty=single_info_temp[1] ; 
             int count = stoi(single_info_temp[2]) ; 
             vector<Questions * > & all_questions = Questions::get_all_questions()[make_pair(subject , difficulty)] ; 
-            auto sort_priority = [](Questions * a , Questions * b)
-            {
-                if((a->priority!=b->priority ))
-                {
-                    if(a->priority > b->priority) return true ;
-                    else return false ; 
-                }
-                else
-                {
-                    if(a->question_text < b->question_text) return true ; 
-                    else return false ; 
-                }
-            } ; 
-            sort(all_questions.begin(),all_questions.end(),sort_priority) ; 
+
+            sort(all_questions.begin(),all_questions.end(),Questions::sort_priority) ; 
             vector<Questions * > choosen_question (all_questions.begin(),all_questions.begin()+count) ;
             choosen_questions.insert(choosen_questions.end(),choosen_question.begin(),choosen_question.end()) ; 
         } 
@@ -395,8 +409,9 @@ public :
             else if(input==AUTO_GENERATE)
             {
                 string test_name=IO::parse_word_in_quote(current_line) ;
-
-
+                auto exam_questions = Questions::choose_question_from_two_least_subject_avg() ; 
+                new Exam (exam_questions , test_name)  ; 
+                cout<<"Test \'"<<test_name<<"\' was generated successfully.\n" ; 
             }
             else if(input == REPORT)
             {
@@ -418,7 +433,7 @@ public :
                 else if(next_input==SUBJECT)
                 {
                     string subject_name = IO::parse_word_in_quote(current_line) ; 
-
+                    IO::report_subject(subject_name) ;
                 }
             }
             
