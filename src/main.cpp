@@ -41,6 +41,7 @@ private :
     string exam_name ; 
     inline static map<string , vector<vector<string>>> templates_exam={} ; 
     inline static map<string , Exam *> all_exams={} ; 
+    inline static vector<Exam*> all_exams_attend = {} ; 
 public : 
     Exam(vector<Questions*> exam_questions,string exam_name)
     {
@@ -67,6 +68,18 @@ public :
     vector<Questions*> get_exams_questions()
     {
         return this->exam_questions ; 
+    }
+    static void add_exam_attends(Exam * exam )
+    {
+        Exam :: all_exams_attend.push_back(exam) ; 
+    }
+    static vector<Exam*> get_exams_attends()
+    {
+        return Exam::all_exams_attend ;
+    }
+    static string get_exam_name(Exam * exam)
+    {
+        return exam->exam_name ; 
     }
 
 
@@ -324,6 +337,7 @@ public :
                 if (exam==nullptr) cout<<"Could not find test: \'"<<test_name<<"\'\n";
                 else
                 {
+                    Exam::add_exam_attends(exam) ; 
                     vector<Questions*> exam_questions=exam->get_exams_questions();
                     auto categoricaled_question = Questions::categoricalize_question_and_sort(exam_questions) ; 
                     IO::print_exam(categoricaled_question , test_name) ;
@@ -348,6 +362,10 @@ public :
                 {
                     string test_name=parse_word_in_quote(current_line) ;
                     print_report(1,test_name) ; 
+                }
+                else if (next_input==TESTS)
+                {
+
                 }
             }
             
@@ -375,6 +393,15 @@ public :
         string total_score =  three_figure(Report::calculate_score(statistics["total"])) ;
         cout<<"Total score: "<<total_score<<"%.\n" ; 
 
+    }
+    static void report_tests()
+    {
+        cout<<"Results per attended tests:\n" ; 
+        auto exams = Exam::get_exams_attends() ; 
+        for(auto& exam : exams)
+        {
+            exam->
+        }
     }
     
     static string three_figure(double value) {
