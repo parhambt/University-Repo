@@ -246,7 +246,7 @@ class Report
 private : 
 
 public : 
-    static map<string,vector<int>> report_all(const vector<Questions *> &all_questions) 
+    static map<string,vector<int>> report_statistics(const vector<Questions *> &all_questions) 
     {
         map<string,vector<int>> report ; 
         map<string , vector<Questions *>> maped_all_questions=Questions::categoricalize_question_and_sort(all_questions) ;
@@ -255,22 +255,21 @@ public :
             vector<int> statistic = calculate_statistics(questions) ; 
             report.insert({key,statistic}) ;
         }
+        report.insert({"total",calculate_statistics(all_questions)}) ; 
         return report ; 
     }
     static vector<int> calculate_statistics(const vector<Questions*> questions)
     {
         int total_correct =0, total_incorrect=0 , total_blank=0 ; 
-        double score ; 
         for(auto& question:questions)
         {
             total_correct+= question->get_statistic_question()[0] ; 
             total_incorrect += question->get_statistic_question()[1] ; 
             total_blank += question->get_statistic_question()[2] ; 
         }
-        score = total_correct / (total_correct+total_incorrect + total_blank) ; 
         return {total_correct , total_incorrect , total_blank } ; 
- 
     }
+
     static double calculate_score(const vector<int> &statistics)
     {
         return statistics[0]/(statistics[0]+statistics[1]+statistics[2]) ;
@@ -343,27 +342,44 @@ public :
                 cin>>next_input ; 
                 if(next_input==ALL)
                 {
-                     
-
+                    print_report(0 , ALL) ;
+                }
+                else if (next_input==TEST)
+                {
+                    string test_name=parse_word_in_quote(current_line) ;
+                    print_report(1,test_name) ; 
                 }
             }
             
         }
     }
-    static void print_report_all()
+    static void print_report(int stage , string test_name)
     {
-        cout<<"Total report:\n" ;
-        auto statistics = Report::report_all(Questions::get_all_questions_vector()) ; 
+        if(stage==0) cout<<"Total report:\n" ;
+        else cout<<"Results for "<<test_name<<":\n" ; 
+        map<string,vector<int>> statistics ; 
+        if(stage ==0) statistics = Report::report_statistics(Questions::get_all_questions_vector()) ; 
+        else 
+        {
+            auto exam =Exam::get_exam(test_name) ; 
+            auto exam_questions = exam->get_exams_questions() ; 
+            statistics = Report::report_statistics(exam_questions);
+        }
         for(auto [key,statistic]:statistics)
         {
+            if(key=="total") continue;
             string score = three_figure(Report::calculate_score(statistic)) ; 
             cout<<key<<": "<<statistic[0]<<" corrects, "<<statistic[1]<<" incorrects and "<<statistic[2]<<" blanks. Score: "<<score<<"%.\n" ; 
         }
+        cout<<"\nTotal results: "<<statistics["total"][0]<<" corrects, "<<statistics["total"][1]<<" incorrects and "<<statistics["total"][2]<<"blanks.\n" ; 
+        string total_score =  three_figure(Report::calculate_score(statistics["total"])) ;
+        cout<<"Total score: "<<total_score<<"%.\n" ; 
 
     }
+    
     static string three_figure(double value) {
-        std::ostringstream out;
-        out << std::fixed << std::setprecision(3) << (value * 100) << "%";
+        ostringstream out;
+        out << fixed << setprecision(3) << (value * 100) << "%";
         return out.str();
     }
     static void print_exam(const map<string , vector<Questions *>>& categoricaled_question,string test_name)
