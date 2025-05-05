@@ -27,6 +27,7 @@ const string CORRECT_ANS = "correct ans" ;
 const string NUM_INCORRECTS = "numOfIncorrects" ; 
 const string NUM_BLANKS = "numOfBlanks" ; 
 const string NUM_CORRECTS = "numOfCorrects" ; 
+const vector<string> DIFFICULTY =  {"easy" , "medium" ,"hard"} ; 
 const string  TAB = "    " ; 
 const string FLASH = " <-" ; 
 const vector<vector<string>> NONE_VECTOR = {{"NONE","NONE"}} ; 
@@ -369,11 +370,30 @@ public :
                 }
                 else if(next_input==SUBJECT)
                 {
-                    
+                    string subject_name = IO::parse_word_in_quote(current_line) ; 
+
                 }
             }
             
         }
+    }
+    static void report_subject(string subject)
+    {
+        cout<<"Results for "<<subject<<":\n" ; 
+        vector<Questions*> all_questions ; 
+        for(auto difficulty : DIFFICULTY)
+        {
+            auto questions = Questions::get_all_questions()[make_pair(subject , difficulty)] ;
+            all_questions.reserve(questions.size()) ; 
+            all_questions.insert(all_questions.end() , questions.begin(),questions.end()) ; 
+            auto statistics = Report::report_statistics(questions);
+            print_static(statistics , difficulty , false) ; 
+        }
+        auto all_staticstic = Report::report_statistics(all_questions); 
+        string total_score =  three_figure(Report::calculate_score(all_staticstic)) ;
+        cout<<"Total score: "<<total_score<<"%.\n" ; 
+
+
     }
     static void print_report(int stage , string test_name)
     {
@@ -390,13 +410,26 @@ public :
         for(auto [key,statistic]:statistics)
         {
             if(key=="total") continue;
-            string score = three_figure(Report::calculate_score(statistic)) ; 
-            cout<<key<<": "<<statistic[0]<<" corrects, "<<statistic[1]<<" incorrects and "<<statistic[2]<<" blanks. Score: "<<score<<"%.\n" ; 
+            // string score = three_figure(Report::calculate_score(statistic)) ; 
+            // cout<<key<<": "<<statistic[0]<<" corrects, "<<statistic[1]<<" incorrects and "<<statistic[2]<<" blanks. Score: "<<score<<"%.\n" ; 
+            IO::print_static(statistic , key,true)  ;
         }
         cout<<"\nTotal results: "<<statistics["total"][0]<<" corrects, "<<statistics["total"][1]<<" incorrects and "<<statistics["total"][2]<<"blanks.\n" ; 
         string total_score =  three_figure(Report::calculate_score(statistics["total"])) ;
         cout<<"Total score: "<<total_score<<"%.\n" ; 
 
+    }
+    static void print_static(const vector<int>&statistic , string key , bool is_score)
+    {
+        if(is_score) 
+        {    
+            string score = three_figure(Report::calculate_score(statistic)) ;
+            cout<<key<<": "<<statistic[0]<<" corrects, "<<statistic[1]<<" incorrects and "<<statistic[2]<<" blanks. Score: "<<score<<"%.\n" ;
+        }
+        else
+        {
+            cout<<key<<": "<<statistic[0]<<" corrects, "<<statistic[1]<<" incorrects and "<<statistic[2]<<" blanks.\n" ;
+        }
     }
     static void report_tests()
     {
@@ -407,8 +440,10 @@ public :
             string exam_name =exam->get_exam_name() ; 
             auto exam_questions = exam->get_exams_questions() ; 
             auto statistics = Report::report_statistics(exam_questions) ; 
-            string score = three_figure(Report::calculate_score(statistics)) ; 
-            cout<<exam_name<<": "<<statistics[0]<<" corrects, "<<statistics[1]<<" incorrects and "<<statistics[2]<<"blanks. Score: "<<score<<"%.\n" ; 
+            // string score = three_figure(Report::calculate_score(statistics)) ; 
+            // cout<<exam_name<<": "<<statistics[0]<<" corrects, "<<statistics[1]<<" incorrects and "<<statistics[2]<<"blanks. Score: "<<score<<"%.\n" ; 
+            IO::print_static(statistics , exam_name,true) ; 
+
         }
     }
     
