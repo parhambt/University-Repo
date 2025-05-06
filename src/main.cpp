@@ -109,7 +109,7 @@ public :
 class Questions
 {
 private : 
-    int num_blanks , num_corrects , num_incorrect , priority,choosen_option  ;
+    int num_blanks , num_corrects , num_incorrect , priority,choosen_option ,num_seen_question ;
     string question_text,difficulty,subject,option1,option2,option3,option4,correct_answer;
     inline static map<pair<string,string> , vector<Questions * >> all_questions={} ; 
     inline static vector<Questions * > all_questions_vector={} ; 
@@ -131,6 +131,7 @@ public :
         this->num_incorrect = 0  ; 
         this->priority = 0 ; 
         this->choosen_option = -1 ; 
+        this->num_seen_question = 0 ; 
         Questions::all_questions[make_pair(subject,difficulty)].push_back(this) ; 
         Questions::all_questions_vector.push_back(this) ; 
 
@@ -183,15 +184,16 @@ public :
         vector<string> all_subject = Questions::find_all_subject() ;
         for(auto subject: all_subject)
         {
-            int count_true = 0 ; 
+            int count_true = 0  , all_seen_questions; 
             auto all_question_subject = get_questions_by_subject(subject) ; 
             for(auto& question:all_question_subject)
             {
                 if(question->choosen_option == stoi(question->correct_answer)) count_true++ ; 
+                all_seen_questions+= question->num_seen_question ; 
 
             }
-            if(all_questions.size()==0) answer.push_back(make_pair(subject , 0)) ; 
-            else  answer.push_back({subject , count_true / all_questions.size()}) ; 
+            if(all_seen_questions==0) answer.push_back(make_pair(subject , 0)) ; 
+            else  answer.push_back({subject , count_true / all_seen_questions}) ; 
         }
         return answer ; 
 
@@ -226,24 +228,37 @@ public :
         if(this->correct_answer == choosen_answer) return true ; 
         else return false ; 
     }
-    bool choose_answer(string choosen_answer)
+    static bool look_like_proper_answer(string choosen_answer)
+    {
+        if(choosen_answer=="1"||choosen_answer=="2"||choosen_answer=="3"||choosen_answer=="4"||choosen_answer.empty()) return true  ; 
+        else return false ; 
+    }
+    void choose_answer_for_now(string choosen_answer)
     {
         if(choosen_answer=="1"||choosen_answer=="2"||choosen_answer=="3"||choosen_answer=="4")
         {
-            if(evaluate_answer(choosen_answer)) this->num_corrects +=1 ; 
-            else this->num_incorrect+=1 ; 
-            this->choosen_option = stoi(choosen_answer) ; 
-            priority_calculator();
-            return true ;
+            this->choosen_option = stoi(choosen_answer) ;    
         }
         else if(choosen_answer.empty()) 
         {
-            this->num_blanks +=1 ; 
             this->choosen_option = 0 ; 
-            priority_calculator(); 
-            return true ; 
         }
-        return false ; 
+        
+        
+    }
+    static void choose_answer(const map<Questions* , string> &questions_with_answer)
+    {
+        for(const auto& [question,answer]:questions_with_answer)
+        {
+            
+            if(answer.empty()) question->choosen_option = 0 ; 
+            else question->choosen_option = stoi(answer) ;
+            if(answer == question->correct_answer) question->num_corrects +=1 ; 
+            else if ( answer.empty()) question->num_blanks +=1 ; 
+            else question->num_incorrect +=1 ; 
+            question->priority_calculator() ; 
+            question->num_seen_question +=1 ;
+        }
         
     }
     void priority_calculator()
@@ -534,6 +549,7 @@ public :
     }
     static void print_exam(const map<string , vector<Questions *>>& categoricaled_question,string test_name)
     {
+        map<Questions* , string> questions_with_answer ; 
         cout<<test_name <<":\n" ;
         int count = 1 , count_prev=0; 
         vector<Questions*> questions_vector = Exam::map_to_vector(categoricaled_question) ; 
@@ -550,7 +566,7 @@ public :
             {
                 IO::option_printer(choosen_answer,it,count,count_prev) ; 
             }
-            bool state=IO::enter_option(it,is_valid_option,questions_vector) ;
+            bool state=IO::enter_option(it,is_valid_option,questions_vector , questions_with_answer) ;
             if(state==false) 
             {
                 --it ; --count ;
@@ -566,6 +582,7 @@ public :
             
             
         } 
+        Questions::choose_answer(questions_with_answer) ; 
         cout<<"Finished "<<test_name<<".\n" ; 
     }
 
@@ -592,16 +609,17 @@ public :
         if(choosen_answer==4 && count_prev>0)cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<FLASH<<endl;
         else  cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<endl  ;
     }
-    static bool enter_option( vector<Questions*>::iterator &it, bool &is_valid_option,vector<Questions*> &questions)
+    static bool enter_option( vector<Questions*>::iterator &it, bool &is_valid_option,vector<Questions*> &questions , map<Questions* , string> & questions_with_answer)
     {
-         
-        
         while(is_valid_option!=true)
         {
             string answer ; 
             cout<<"Your answer: " ; 
             getline(cin,answer) ;
-            is_valid_option =(*it)->choose_answer(answer) ; 
+            // is_valid_option =(*it)->choose_answer(answer) ; 
+            is_valid_option = Questions::look_like_proper_answer(answer) ; 
+            (*it)->choose_answer_for_now(answer) ;
+            if(is_valid_option) questions_with_answer.insert_or_assign((*it) ,answer ) ; 
             if(answer =="previous" && questions.begin()!=it) return false ; 
             else if(answer == "previous" && questions.begin() == it) is_valid_option = false ; 
             if(is_valid_option==false) cout<<"Invalid answer, please try again.\n" ; 
