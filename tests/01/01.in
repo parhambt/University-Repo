@@ -1,7 +1,7 @@
 create_template 'Simulator' Math:hard:1 Chemistry:easy:1 Physics:medium:2
 create_template 'Simulator' Geography:medium:2
 generate_test 'test No.1' 'Simulater'
-generate_test 'test No.1' 'Simulator'
+create_template 'Simulator' Math:hard:1 Chemistry:easy:1 Physics:medium:2
 generate_test 'test No.2' 'Simulator'
 attend 'test No.3'
 attend 'test No.1'
