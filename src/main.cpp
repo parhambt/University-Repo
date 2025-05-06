@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <string>
 #include <set>
+#include <cctype>
 using namespace std;
 
 
@@ -87,7 +88,18 @@ public :
     {
         return this->exam_name ; 
     }
-
+    static vector<Questions*> map_to_vector(const map<string ,vector<Questions*>> &all_questions)
+    {
+        vector<Questions*> vector ; 
+        for(const auto& [key,questions]:all_questions)
+        {
+            for(const auto& question:questions)
+            {
+                vector.push_back(question) ; 
+            }
+        }
+        return vector ; 
+    }
 
 
 };
@@ -404,7 +416,6 @@ public :
                     auto categoricaled_question = Questions::categoricalize_question_and_sort(exam_questions) ; 
                     IO::print_exam(categoricaled_question , test_name) ;
                 }
-
             }
             else if(input==AUTO_GENERATE)
             {
@@ -518,45 +529,59 @@ public :
     {
         cout<<test_name <<":\n" ;
         int count = 1  ; 
-        for(auto [subject,questions] : categoricaled_question)
+        vector<Questions*> questions_vector = Exam::map_to_vector(categoricaled_question) ; 
+        auto it  = questions_vector.begin() ; 
+        while( it!=questions_vector.end() )
         {
-            auto it  = questions.begin() ; 
+            
             bool is_valid_option = false ; 
-            while( it!=questions.end() )
+            
+            
+            int choosen_answer = (*(it))->get_choosen_option() ; 
+            if(is_valid_option==false)
             {
-                int choosen_answer = (*it)->get_choosen_option() ; 
-                if(is_valid_option==false)
-                {
-                    option_printer(choosen_answer,it,count) ; 
-                }
-                bool state=IO::enter_option(it,is_valid_option,questions) ;
-                if(state==false) 
-                {
-                   --it ; --count ;
-                }
-                else 
-                {
-                    ++it ; ++count ;
-                }  
-                
+                IO::option_printer(choosen_answer,it,count) ; 
             }
+            bool state=IO::enter_option(it,is_valid_option,questions_vector) ;
+            if(state==false) 
+            {
+                --it ; --count ;
+            }
+            else 
+            {
+                ++it ; ++count ;
+            }  
+                
+            
             
         } 
+        cout<<"Finished "<<test_name<<".\n" ; 
     }
-    static void option_printer(int choosen_answer,vector<Questions*>::iterator it,int count)
+
+    
+
+    
+    
+    
+    static void option_printer(int choosen_answer,const vector<Questions*>::iterator it,int count)
     {
-        if(choosen_answer==-1) cout<<count<<") "<<(*it)->get_question_detail(QUESTION_TEXT)<<endl ; 
-        else cout<<count<<") "<<(*it)->get_question_detail(QUESTION_TEXT)<<FLASH<<endl ; 
-        if(choosen_answer==-1)cout<<TAB<<"1. "<<(*it)->get_question_detail(OPTION1)<<endl ; 
-        else cout<<TAB<<"1. "<<(*it)->get_question_detail(OPTION1)<<FLASH<<endl ; 
-        if(choosen_answer==-1)cout<<TAB<<"2. "<<(*it)->get_question_detail(OPTION2)<<endl ;
-        else cout<<TAB<<"2. "<<(*it)->get_question_detail(OPTION2)<<FLASH<<endl ;
-        if(choosen_answer==-1)cout<<TAB<<"3. "<<(*it)->get_question_detail(OPTION3)<<endl ;
-        else cout<<TAB<<"3. "<<(*it)->get_question_detail(OPTION3)<<FLASH<<endl ;
-        if(choosen_answer==-1)cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<endl ;
-        else cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<FLASH<<endl ;
+        
+
+        cout<<count<<") "<<(*it)->get_question_detail(QUESTION_TEXT)<<endl; 
+
+        if(choosen_answer==1) cout<<TAB<<"1. "<<(*it)->get_question_detail(OPTION1)<<FLASH<<endl; 
+        else   cout<<TAB<<"1. "<<(*it)->get_question_detail(OPTION1)<<endl; 
+
+        if(choosen_answer==2)cout<<TAB<<"2. "<<(*it)->get_question_detail(OPTION2)<<FLASH<<endl ;
+        else   cout<<TAB<<"2. "<<(*it)->get_question_detail(OPTION2)<<endl ;
+        
+        if(choosen_answer==3)cout<<TAB<<"3. "<<(*it)->get_question_detail(OPTION3)<<FLASH<<endl ;
+        else   cout<<TAB<<"3. "<<(*it)->get_question_detail(OPTION3)<<endl;
+        
+        if(choosen_answer==4)cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<FLASH<<endl;
+        else  cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<endl  ;
     }
-    static bool enter_option( vector<Questions*>::iterator it, bool &is_valid_option,vector<Questions*> &questions)
+    static bool enter_option( vector<Questions*>::iterator &it, bool &is_valid_option,vector<Questions*> &questions)
     {
          
         
@@ -566,12 +591,14 @@ public :
             cout<<"Your answer: " ; 
             getline(cin,answer) ;
             is_valid_option =(*it)->choose_answer(answer) ; 
-            if(answer =="previous"&&questions.begin()!=it) return false ; 
+            if(answer =="previous" && questions.begin()!=it) return false ; 
             else if(answer == "previous" && questions.begin() == it) is_valid_option = false ; 
             if(is_valid_option==false) cout<<"Invalid answer, please try again.\n" ; 
         }
         return true ; 
     }
+    
+
 
     static  vector<vector<string>> parse_template_data(istringstream & given_line)
     {
