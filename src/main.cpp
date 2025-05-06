@@ -46,7 +46,7 @@ class Exam
 private : 
     vector<Questions*> exam_questions ; 
     string exam_name ; 
-    int num_corrects , num_incorrects , num_blanks ; 
+    map<string , vector<int>> exam_statistics ; 
     inline static map<string , vector<vector<string>>> templates_exam={} ; 
     inline static map<string , Exam *> all_exams={} ; 
     inline static vector<Exam*> all_exams_attend = {} ; 
@@ -56,16 +56,35 @@ public :
         this->exam_questions = exam_questions ; 
         this->exam_name = exam_name ; 
         all_exams.insert({exam_name,this}) ; 
+        this->exam_questions = {} ; 
+        this->initial_exam_statistics() ;   
     }
-    void set_statistics_exam(int num_corrects , int num_incorrects , int num_blanks)
+    void initial_exam_statistics()
     {
-        this->num_corrects = num_corrects ; 
-        this-> num_incorrects = num_incorrects ; 
-        this->num_blanks = num_blanks ; 
+        auto all_exam_subjects = find_all_exam_subject() ; 
+        for(const auto& subject:all_exam_subjects)
+        {
+            this->exam_statistics . insert({subject , {0,0,0}}) ; 
+        }
     }
-    vector<int> get_statistics_exam()
+    vector<string> find_all_exam_subject()
     {
-        return {this->num_corrects , this->num_incorrects , num_blanks} ; 
+        auto questions = this->exam_questions ; 
+        set<string> all_subject ; 
+        for( const auto& question:questions)
+        {
+            all_subject.insert(question->get_subject()) ; 
+        }
+        return vector(all_subject.begin(),all_subject.end()) ; 
+
+    }
+    void set_statistics_exam(const map<string , vector<int>> &exam_statistics )
+    {
+        this->exam_statistics.insert(exam_statistics.begin(),exam_statistics.end()) ;  
+    }
+    map<string , vector<int>> get_statistics_exam()
+    {
+        return this->exam_statistics ; 
     }
     static void add_template(const map<string , vector<vector<string>>> & template_exam)
     {
@@ -167,6 +186,10 @@ public :
         }
         return vector(all_subject.begin(),all_subject.end()) ; 
     }
+    string get_subject()
+    {
+        return this->subject ; 
+    }
     static vector<Questions*> choose_question_from_two_least_subject_avg()
     {
         vector<Questions*> choosen_questions ;  
@@ -260,6 +283,8 @@ public :
     static void choose_answer(const pair<Exam *,map<Questions* , string>> &questions_with_answer)
     {
         auto exam = questions_with_answer.first ;
+        map<string , vector<int>> exam_statistics ; 
+        vector<int> temp_statistics ; 
         int num_corrects=0 , num_incorrect=0 , num_blanks=0 ; 
         for(const auto& [question,answer]:questions_with_answer.second)
         {
@@ -283,7 +308,7 @@ public :
             question->priority_calculator() ; 
             question->num_seen_question +=1 ;
         }
-        exam->set_statistics_exam(num_corrects , num_incorrect , num_blanks) ; 
+        
         
     }
     void priority_calculator()
@@ -535,6 +560,12 @@ public :
         cout<<"\nTotal results: "<<statistics["total"][0]<<" corrects, "<<statistics["total"][1]<<" incorrects and "<<statistics["total"][2]<<"blanks.\n" ; 
         string total_score =  three_figure(Report::calculate_score(statistics["total"])) ;
         cout<<"Total score: "<<total_score<<".\n" ; 
+
+    }
+    static void print_test(string test_name)
+    {
+        auto exam =Exam::get_exam(test_name) ;
+        auto statistics=exam->get_statistics_exam() ; 
 
     }
     static void print_static(const vector<int>&statistic , string key , bool is_score)
