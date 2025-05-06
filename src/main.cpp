@@ -184,7 +184,7 @@ public :
         vector<string> all_subject = Questions::find_all_subject() ;
         for(auto subject: all_subject)
         {
-            int count_true = 0  , all_seen_questions; 
+            int count_true = 0  , all_seen_questions=0; 
             auto all_question_subject = get_questions_by_subject(subject) ; 
             for(auto& question:all_question_subject)
             {
@@ -193,7 +193,7 @@ public :
 
             }
             if(all_seen_questions==0) answer.push_back(make_pair(subject , 0)) ; 
-            else  answer.push_back({subject , count_true / all_seen_questions}) ; 
+            else  answer.push_back({subject , (double)count_true / all_seen_questions}) ; 
         }
         return answer ; 
 
