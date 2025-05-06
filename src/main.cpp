@@ -46,6 +46,7 @@ class Exam
 private : 
     vector<Questions*> exam_questions ; 
     string exam_name ; 
+    int num_corrects , num_incorrects , num_blanks ; 
     inline static map<string , vector<vector<string>>> templates_exam={} ; 
     inline static map<string , Exam *> all_exams={} ; 
     inline static vector<Exam*> all_exams_attend = {} ; 
@@ -55,6 +56,16 @@ public :
         this->exam_questions = exam_questions ; 
         this->exam_name = exam_name ; 
         all_exams.insert({exam_name,this}) ; 
+    }
+    void set_statistics_exam(int num_corrects , int num_incorrects , int num_blanks)
+    {
+        this->num_corrects = num_corrects ; 
+        this-> num_incorrects = num_incorrects ; 
+        this->num_blanks = num_blanks ; 
+    }
+    vector<int> get_statistics_exam()
+    {
+        return {this->num_corrects , this->num_incorrects , num_blanks} ; 
     }
     static void add_template(const map<string , vector<vector<string>>> & template_exam)
     {
@@ -246,19 +257,33 @@ public :
         
         
     }
-    static void choose_answer(const map<Questions* , string> &questions_with_answer)
+    static void choose_answer(const pair<Exam *,map<Questions* , string>> &questions_with_answer)
     {
-        for(const auto& [question,answer]:questions_with_answer)
+        auto exam = questions_with_answer.first ;
+        int num_corrects=0 , num_incorrect=0 , num_blanks=0 ; 
+        for(const auto& [question,answer]:questions_with_answer.second)
         {
-            
             if(answer.empty()) question->choosen_option = 0 ; 
             else question->choosen_option = stoi(answer) ;
-            if(answer == question->correct_answer) question->num_corrects +=1 ; 
-            else if ( answer.empty()) question->num_blanks +=1 ; 
-            else question->num_incorrect +=1 ; 
+            if(answer == question->correct_answer)
+            {
+                question->num_corrects +=1 ; 
+                num_corrects++;
+            }
+            else if ( answer.empty()) 
+            {
+                question->num_blanks +=1 ;
+                num_blanks++ ; 
+            } 
+            else 
+            {
+                question->num_incorrect +=1 ; 
+                num_incorrect++ ;
+            }
             question->priority_calculator() ; 
             question->num_seen_question +=1 ;
         }
+        exam->set_statistics_exam(num_corrects , num_incorrect , num_blanks) ; 
         
     }
     void priority_calculator()
@@ -436,7 +461,7 @@ public :
                     Exam::add_exam_attends(exam) ; 
                     vector<Questions*> exam_questions=exam->get_exams_questions();
                     auto categoricaled_question = Questions::categoricalize_question_and_sort(exam_questions) ; 
-                    IO::print_exam(categoricaled_question , test_name) ;
+                    IO::print_exam(categoricaled_question , test_name , exam ) ;
                 }
             }
             else if(input==AUTO_GENERATE)
@@ -449,7 +474,7 @@ public :
             else if(input == REPORT)
             {
                 string next_input  ; 
-                cin>>next_input ; 
+                current_line>>next_input ; 
                 if(next_input==ALL)
                 {
                     IO::print_report(0 , ALL) ;
@@ -486,9 +511,7 @@ public :
         }
         auto all_staticstic = Report::report_statistics(all_questions); 
         string total_score =  three_figure(Report::calculate_score(all_staticstic)) ;
-        cout<<"Total score: "<<total_score<<"%.\n" ; 
-
-
+        cout<<"Total score: "<<total_score<<".\n" ; 
     }
     static void print_report(int stage , string test_name)
     {
@@ -511,7 +534,7 @@ public :
         }
         cout<<"\nTotal results: "<<statistics["total"][0]<<" corrects, "<<statistics["total"][1]<<" incorrects and "<<statistics["total"][2]<<"blanks.\n" ; 
         string total_score =  three_figure(Report::calculate_score(statistics["total"])) ;
-        cout<<"Total score: "<<total_score<<"%.\n" ; 
+        cout<<"Total score: "<<total_score<<".\n" ; 
 
     }
     static void print_static(const vector<int>&statistic , string key , bool is_score)
@@ -519,7 +542,7 @@ public :
         if(is_score) 
         {    
             string score = three_figure(Report::calculate_score(statistic)) ;
-            cout<<key<<": "<<statistic[0]<<" corrects, "<<statistic[1]<<" incorrects and "<<statistic[2]<<" blanks. Score: "<<score<<"%.\n" ;
+            cout<<key<<": "<<statistic[0]<<" corrects, "<<statistic[1]<<" incorrects and "<<statistic[2]<<" blanks. Score: "<<score<<".\n" ;
         }
         else
         {
@@ -547,9 +570,10 @@ public :
         out << fixed << setprecision(3) << (value * 100) << "%";
         return out.str();
     }
-    static void print_exam(const map<string , vector<Questions *>>& categoricaled_question,string test_name)
+    static void print_exam(const map<string , vector<Questions *>>& categoricaled_question,string test_name , Exam * exam)
     {
-        map<Questions* , string> questions_with_answer ; 
+        pair<Exam *,map<Questions* , string>> questions_with_answer ; 
+        questions_with_answer.first = exam ; 
         cout<<test_name <<":\n" ;
         int count = 1 , count_prev=0; 
         vector<Questions*> questions_vector = Exam::map_to_vector(categoricaled_question) ; 
@@ -566,7 +590,7 @@ public :
             {
                 IO::option_printer(choosen_answer,it,count,count_prev) ; 
             }
-            bool state=IO::enter_option(it,is_valid_option,questions_vector , questions_with_answer) ;
+            bool state=IO::enter_option(it,is_valid_option,questions_vector , questions_with_answer ) ;
             if(state==false) 
             {
                 --it ; --count ;
@@ -609,7 +633,7 @@ public :
         if(choosen_answer==4 && count_prev>0)cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<FLASH<<endl;
         else  cout<<TAB<<"4. "<<(*it)->get_question_detail(OPTION4)<<endl  ;
     }
-    static bool enter_option( vector<Questions*>::iterator &it, bool &is_valid_option,vector<Questions*> &questions , map<Questions* , string> & questions_with_answer)
+    static bool enter_option( vector<Questions*>::iterator &it, bool &is_valid_option,vector<Questions*> &questions , pair<Exam *,map<Questions* , string>> & questions_with_answer )
     {
         while(is_valid_option!=true)
         {
@@ -619,7 +643,7 @@ public :
             // is_valid_option =(*it)->choose_answer(answer) ; 
             is_valid_option = Questions::look_like_proper_answer(answer) ; 
             (*it)->choose_answer_for_now(answer) ;
-            if(is_valid_option) questions_with_answer.insert_or_assign((*it) ,answer ) ; 
+            if(is_valid_option) questions_with_answer.second.insert_or_assign((*it) ,answer ) ; 
             if(answer =="previous" && questions.begin()!=it) return false ; 
             else if(answer == "previous" && questions.begin() == it) is_valid_option = false ; 
             if(is_valid_option==false) cout<<"Invalid answer, please try again.\n" ; 
